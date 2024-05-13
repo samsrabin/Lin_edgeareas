@@ -1,0 +1,35 @@
+﻿landcover_str,landcover_num
+#1. Floresta,1
+#1.1. Formação Florestal,3
+#1.2. Formação Savânica,4
+#1.3. Mangue,5
+#1.4. Restinga Arborizada (beta),49
+#2. Formação Natural não Florestal,10
+#2.1. Campo Alagado e Área Pantanosa,11
+#2.2. Formação Campestre,12
+#2.3. Apicum,32
+#2.4. Afloramento Rochoso,29
+#2.5. Outras Formações não Florestais,13
+#3. Agropecuária,14
+#3.1. Pastagem,15
+#3.2. Agricultura,18
+#3.2.1. Lavoura Temporária,19
+#3.2.1.1. Soja,39
+#3.2.1.2. Cana,20
+#3.2.1.3. Arroz (beta),40
+#3.2.1.4. Outras Lavouras Temporárias,41
+#3.2.2. Lavoura Perene,36
+#3.2.2.1. Café (beta),46
+#3.2.2.2. Citrus (beta),47
+#3.2.2.3. Outras Lavouras Perenes,48
+#3.3. Silvicultura,9
+#3.4 Mosaico de Agricultura e Pastagem,21
+#4. Área não Vegetada,22
+"#4.1. Praia, Duna e Areal",23
+#4.2. Área Urbanizada,24
+#4.3. Mineração,30
+#4.4. Outras Áreas não Vegetadas,25
+#5. Corpo D'água,26
+"#5.1. Rio, Lago e Oceano",33
+#5.2. Aquicultura,31
+#6. Não Observado,27

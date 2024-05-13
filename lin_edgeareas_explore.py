@@ -17,5 +17,18 @@ filename_template = os.path.join(this_dir, "inout", version, f"Edgearea_clean_%d
 edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
 
 # Import land covers
-filename_template = os.path.join(this_dir, "inout", version, f"Landcover_clean_%d.csv")
-landcovers = lem.read_combine_multiple_csvs(filename_template, version)
+landcovers = lem.import_landcovers(this_dir, version)
+
+
+# %% Get derived information
+importlib.reload(lem)
+
+# Total forest area (from Lin's edgeareas files)
+totalareas = edgeareas.groupby(["Year", "site"]).sum().drop(columns="edge").rename(columns={"sumarea": "forest_from_ea"})
+
+# Total forest area (from landcovers)
+totalareas = lem.get_site_lc_area("forest", totalareas, landcovers)
+
+# Total area
+site_area = landcovers.groupby(["Year", "site"]).sum()
+totalareas = totalareas.assign(site=site_area.sumarea)

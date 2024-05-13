@@ -4,6 +4,12 @@ import matplotlib.pyplot as plt
 import importlib
 import pandas as pd
 
+def get_site_lc_area(lc, totalareas, landcovers):
+    lc_area = landcovers[landcovers["is_" + lc]].groupby(["Year", "site"]).sum()
+    lc_area = lc_area.rename(columns={"sumarea": lc})
+    totalareas = totalareas.join(lc_area[lc])
+    return totalareas
+
 def get_version_info(version):
     vinfo = {}
     if version == "20240506":
@@ -11,6 +17,44 @@ def get_version_info(version):
     else:
         raise RuntimeError(f"Version {version} not recognized")
     return vinfo
+
+def import_landcovers(this_dir, version):
+    # Import legend
+    landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
+    
+    # Import landcovers
+    filename_template = os.path.join(this_dir, "inout", version, f"Landcover_clean_%d.csv")
+    landcovers = read_combine_multiple_csvs(filename_template, version)
+    landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
+    
+    # Add labels
+    landcovers = landcovers.assign(tmp = landcovers.landcover_num)
+    landcovers = landcovers.set_index("tmp").join(landcovers_legend.set_index("landcover_num"))
+    
+    # Regenerate index
+    index = np.arange(len(landcovers.index))
+    landcovers = landcovers.set_index(index)
+    
+    # Add legend-based info
+    is_forest = []
+    for i, num in enumerate(landcovers.landcover_num):
+        
+        # Get landcover string for this landcover code
+        matching_landcovers = landcovers_legend[landcovers_legend.landcover_num == num]
+        Nmatches = matching_landcovers.shape[0]
+        if Nmatches != 1:
+            raise RuntimeError(f"Expected 1 landcover matching {num}; found {Nmatches}")
+        landcover_str = matching_landcovers.landcover_str.values[0]
+        
+        # Classify based on landcover string
+        is_forest.append("#1" in landcover_str)
+
+    landcovers = landcovers.assign(
+        is_forest=is_forest,
+        )
+    
+    return landcovers
+
 
 def read_combine_multiple_csvs(filename_template, version):
     vinfo = get_version_info(version)
