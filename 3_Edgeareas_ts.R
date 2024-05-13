@@ -1,5 +1,5 @@
-
-
+topdir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
+version = "20240429"
 
 
 # Preamble ----------------------------------------------------------------
@@ -8,9 +8,7 @@ library("jsonlite")
 library("ggplot2")
 library("ggpubr")
 
-setwd(
-  "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-)
+setwd(topdir)
 
 
 # Settings ----------------------------------------------------------------
@@ -46,13 +44,13 @@ process_one <- function(input_file) {
   color_scale_legend = scale_color_manual("Edge group (m)", values = bin_colors, labels = bin_labels)
   
   # Get total area of each site. Is there any way to automate this?
-  if (input_file == "inout/20240429/Edgearea_clean_1.csv") {
+  if (basename(input_file) == "Edgearea_clean_1.csv") {
     site_area = 354
-  } else if (input_file == "inout/20240429/Edgearea_clean_2.csv") {
+  } else if (basename(input_file) == "Edgearea_clean_2.csv") {
     site_area = 370
-  } else if (input_file == "inout/20240429/Edgearea_clean_3.csv") {
+  } else if (basename(input_file) == "Edgearea_clean_3.csv") {
     site_area = 367
-  } else if (input_file == "inout/20240429/Edgearea_clean_4.csv") {
+  } else if (basename(input_file) == "Edgearea_clean_4.csv") {
     site_area = 98.2
   } else {
     stop("input_file not recognized: can't get site area")
@@ -151,7 +149,7 @@ process_one <- function(input_file) {
 }
 
 for (i in 1:4) {
-  input_file = sprintf("inout/20240429/Edgearea_clean_%s.csv", i)
+  input_file = file.path("inout", version, sprintf("Edgearea_clean_%s.csv", i))
   df.this = process_one(input_file)
   if (i == 1) {
     df.all = data.frame(matrix(nrow = 0, ncol = length(colnames(df.this))))
