@@ -26,8 +26,9 @@ importlib.reload(lem)
 # Total forest area (from Lin's edgeareas files)
 totalareas = edgeareas.groupby(["Year", "site"]).sum().drop(columns="edge").rename(columns={"sumarea": "forest_from_ea"})
 
-# Total forest area (from landcovers)
-totalareas = lem.get_site_lc_area("forest", totalareas, landcovers)
+# Total derived areas (from landcovers)
+for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
+    totalareas = lem.get_site_lc_area(lc, totalareas, landcovers)
 
 # Total area
 site_area = landcovers.groupby(["Year", "site"]).sum()
