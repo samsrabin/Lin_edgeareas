@@ -1,5 +1,6 @@
 topdir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-version = "20240429"
+# version = "20240429"
+version = "20240506"
 
 
 # Preamble ----------------------------------------------------------------
@@ -13,16 +14,8 @@ setwd(topdir)
 
 # Settings ----------------------------------------------------------------
 
-process_one <- function(input_file) {
-  bin_labels = c('<30',
-                 '30-100',
-                 '100-300',
-                 '300-500',
-                 '500-1000',
-                 '1000-2000',
-                 '>2000')
-  
-  bin_colors = c(
+process_one <- function(input_file, version) {
+  lin_original_colors = c(
     "#9E0142" ,
     "#D53E4F",
     "#F46D43" ,
@@ -31,6 +24,40 @@ process_one <- function(input_file) {
     "springgreen3",
     "darkgreen"
   )
+  if (version == "20240429") {
+    bin_labels = c('<30',
+                   '30-100',
+                   '100-300',
+                   '300-500',
+                   '500-1000',
+                   '1000-2000',
+                   '>2000')
+    bin_colors = lin_original_colors
+  } else {
+    if (version == "20240506") {
+      bin_labels = c(
+        '<30',
+        '30-60',
+        '60-90',
+        '90-120',
+        '120-300',
+        '300-500',
+        '500-1000',
+        '1000-2000',
+        '>2000'
+      )
+    } else {
+      stop(sprintf("Version not recognized: %s", version))
+    }
+    Nbins = length(bin_labels)
+    if (Nbins == 7) {
+      bin_colors = lin_original_colors
+    } else {
+      # Use Brewer red-yellow-green instead of Lin's original set of 7 colors
+      bin_colors = scales::pal_brewer(palette = "RdYlGn")(Nbins)
+      # bin_colors = scales::pal_viridis()(Nbins)
+    }
+  }
   
   this_theme = theme(
     panel.grid.major = element_blank(),
@@ -150,7 +177,7 @@ process_one <- function(input_file) {
 
 for (i in 1:4) {
   input_file = file.path("inout", version, sprintf("Edgearea_clean_%s.csv", i))
-  df.this = process_one(input_file)
+  df.this = process_one(input_file, version)
   if (i == 1) {
     df.all = data.frame(matrix(nrow = 0, ncol = length(colnames(df.this))))
     colnames(df.all) = colnames(df.this)
