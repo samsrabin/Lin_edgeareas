@@ -61,7 +61,7 @@ process_one <- function(input_file, version) {
   
   this_theme = theme(
     panel.grid.major = element_blank(),
-    legend.position = "none",
+    legend.position = "right",
     axis.text = element_text(size = 12),
     panel.grid.minor = element_blank()
   )
