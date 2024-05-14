@@ -39,19 +39,24 @@ for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
 site_area = landcovers.groupby(["Year", "site"]).sum()
 totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
+# (cropland_pasture)/(cropland+pasture+forest)
+croppast_frac_croppastfor = totalareas.croppast / (totalareas.fforest + totalareas.croppast)
+totalareas = totalareas.assign(croppast_frac_croppastfor=croppast_frac_croppastfor)
+
 
 # %% Visualize
 
 # X variable
 # xvar = "forest_from_ea"
 # xvar = "fforest"
-xvar = "croppast"
+# xvar = "croppast"
+xvar = "croppast_frac_croppastfor"
 
 # Y variable
 yvar = "bin_as_frac_allforest"
 
 # Exclude sites?
-sites_to_exclude = [4]
+sites_to_exclude = []
 
 
 # Setup
@@ -134,14 +139,14 @@ fig.tight_layout()
 # Add lines with adjustments to sum to 1
 tmp = totalareas[totalareas.index.isin(sites_to_include, level="site")]
 tmp = tmp.div(tmp.sitearea, axis=0)
-step = 0.001
+step = 0.00001
 xdata = np.arange(np.min(tmp[xvar]), np.max(tmp[xvar]) + step, step)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fit = fits[b]
     ydata = fit.eval(x=xdata)
     if b==0:
         ydata_yb = np.expand_dims(ydata, axis=1)
-    else:
+    else: 
         ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
 ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
