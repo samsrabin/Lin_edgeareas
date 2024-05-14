@@ -47,9 +47,14 @@ totalareas = totalareas.assign(sitearea=site_area.sumarea)
 x = "croppast"
 y = "bin_as_frac_allforest"
 
+# Exclude sites?
+sites_to_exclude = [4]
+
+
 # Setup
 importlib.reload(lem)
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
+sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
 
 # Portrait
 nx = 2; figsizex = 11
@@ -68,6 +73,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Get dataframe with just this edge, indexed by Year-site
     thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
+    thisedge_df = thisedge_df[thisedge_df.index.isin(sites_to_include, level="site")]
     thisedge_df = thisedge_df.rename(columns={"sumarea": "bin"})
     
     # Join with areas of different land cover types
@@ -83,6 +89,8 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     sitelist = [i[1] for i in thisedge_df.index]
     plt.sca(fig.axes[b])
     for s, site in enumerate(np.unique(sitelist)):
+        if site in sites_to_exclude:
+            continue
         thisedgesite_df = thisedge_df[thisedge_df.index.get_level_values("site") == site]
         thisedgesite_df.plot(
             ax=fig.axes[b],
