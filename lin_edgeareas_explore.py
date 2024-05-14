@@ -42,10 +42,13 @@ totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
 # %% Visualize
 
-# x = "forest_from_ea"
-# x = "fforest"
-x = "croppast"
-y = "bin_as_frac_allforest"
+# X variable
+# xvar = "forest_from_ea"
+# xvar = "fforest"
+xvar = "croppast"
+
+# Y variable
+yvar = "bin_as_frac_allforest"
 
 # Exclude sites?
 sites_to_exclude = [4]
@@ -56,13 +59,13 @@ importlib.reload(lem)
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
 sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
 
-# Portrait
-nx = 2; figsizex = 11
-ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
+# # Portrait
+# nx = 2; figsizex = 11
+# ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
 
-# # Landscape
-# ny = 2; figsizey = 11
-# nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
+# Landscape
+ny = 2; figsizey = 11
+nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
 
 fig, axs = plt.subplots(
     ny, nx,
@@ -94,16 +97,16 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
         thisedgesite_df = thisedge_df[thisedge_df.index.get_level_values("site") == site]
         thisedgesite_df.plot(
             ax=fig.axes[b],
-            x=x,
-            y=y,
+            x=xvar,
+            y=yvar,
             color=sitecolors[s],
             label = site,
             kind="scatter",
             )
     
     # Add best fit
-    xdata = thisedge_df[x].values
-    ydata = thisedge_df[y].values
+    xdata = thisedge_df[xvar].values
+    ydata = thisedge_df[yvar].values
     isort = np.argsort(xdata)
     xdata = xdata[isort]
     ydata = ydata[isort]
@@ -115,8 +118,8 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
     title_fit = f"{fit}: r2={np.round(result.rsquared, 3)}"
     plt.title(title_bin + title_fit)
-    plt.xlabel(lem.get_axis_labels(x))
-    plt.ylabel(lem.get_axis_labels(y))
+    plt.xlabel(lem.get_axis_labels(xvar))
+    plt.ylabel(lem.get_axis_labels(yvar))
 
 # Get rid of unused axes
 for x in np.arange(nx):
@@ -125,7 +128,21 @@ for x in np.arange(nx):
             fig.delaxes(axs[y][x])
 
 fig.tight_layout()
+
+outfile = f"fits.{version}.{xvar}"
+if sites_to_exclude:
+    outfile += ".excl"
+    for s, site in enumerate(sites_to_exclude):
+        if s > 0:
+            outfile += ","
+        outfile += str(site)
+outfile += ".pdf"
+outpath = os.path.join(
+    this_dir,
+    "inout",
+    version,
+    outfile
+    )
+plt.savefig(outpath)
+
 plt.show()
-    
-
-
