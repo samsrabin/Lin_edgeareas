@@ -50,9 +50,21 @@ y = "bin_as_frac_allforest"
 # Setup
 importlib.reload(lem)
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
-nx = 2
-ny = np.ceil(vinfo["Nbins"]/2)
 
+# Portrait
+nx = 2; figsizex = 11
+ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
+
+# # Landscape
+# ny = 2; figsizey = 11
+# nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
+
+fig, axs = plt.subplots(
+    ny, nx,
+    figsize=(figsizex, figsizey),
+    sharex=True,
+    )
+Nextra = ny*nx - vinfo["Nbins"]
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Get dataframe with just this edge, indexed by Year-site
@@ -70,11 +82,11 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Visualize
     sitelist = [i[1] for i in thisedge_df.index]
-    ax = None
+    plt.sca(fig.axes[b])
     for s, site in enumerate(np.unique(sitelist)):
         thisedgesite_df = thisedge_df[thisedge_df.index.get_level_values("site") == site]
-        ax = thisedgesite_df.plot(
-            ax=ax,
+        thisedgesite_df.plot(
+            ax=fig.axes[b],
             x=x,
             y=y,
             color=sitecolors[s],
@@ -87,7 +99,8 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     plt.title(f"Bin {bin}: {vinfo['bins'][b]} m")
     plt.xlabel(lem.get_axis_labels(x))
     plt.ylabel(lem.get_axis_labels(y))
-    plt.show()
+    # break
+plt.show()
     
 
 
