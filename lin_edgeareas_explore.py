@@ -1,16 +1,21 @@
 # %% Setup
 
 import pandas as pd
+import numpy as np
 import importlib
 import lin_edgeareas_module as lem
+from matplotlib import pyplot as plt
+from matplotlib import colormaps
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 version = "20240506"
 
 
 # %% Import data
-
 importlib.reload(lem)
+
+# Get version info
+vinfo = lem.get_version_info(version)
 
 # Import edge areas
 filename_template = os.path.join(this_dir, "inout", version, f"Edgearea_clean_%d.csv")
@@ -32,4 +37,57 @@ for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
 
 # Total area
 site_area = landcovers.groupby(["Year", "site"]).sum()
-totalareas = totalareas.assign(site=site_area.sumarea)
+totalareas = totalareas.assign(sitearea=site_area.sumarea)
+
+
+# %% Visualize
+
+# x = "forest_from_ea"
+# x = "fforest"
+x = "croppast"
+y = "bin_as_frac_allforest"
+
+# Setup
+importlib.reload(lem)
+sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
+nx = 2
+ny = np.ceil(vinfo["Nbins"]/2)
+
+for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    
+    # Get dataframe with just this edge, indexed by Year-site
+    thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
+    thisedge_df = thisedge_df.rename(columns={"sumarea": "bin"})
+    
+    # Join with areas of different land cover types
+    thisedge_df = thisedge_df.join(totalareas)
+    
+    # Convert to fractional area
+    thisedge_df = thisedge_df.div(thisedge_df.sitearea, axis=0)
+    
+    # Get edge bin area as fraction of total forest
+    thisedge_df = thisedge_df.assign(bin_as_frac_allforest=thisedge_df.bin / thisedge_df.forest_from_ea)
+    
+    # Visualize
+    sitelist = [i[1] for i in thisedge_df.index]
+    ax = None
+    for s, site in enumerate(np.unique(sitelist)):
+        thisedgesite_df = thisedge_df[thisedge_df.index.get_level_values("site") == site]
+        ax = thisedgesite_df.plot(
+            ax=ax,
+            x=x,
+            y=y,
+            color=sitecolors[s],
+            label = site,
+            kind="scatter",
+            )
+    
+    # Add chart info
+    plt.legend(title="Site")
+    plt.title(f"Bin {bin}: {vinfo['bins'][b]} m")
+    plt.xlabel(lem.get_axis_labels(x))
+    plt.ylabel(lem.get_axis_labels(y))
+    plt.show()
+    
+
+

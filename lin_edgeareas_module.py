@@ -15,9 +15,34 @@ def get_version_info(version):
     vinfo = {}
     if version == "20240506":
         vinfo["Nsites"] = 4
+        vinfo["bins"] = [
+            "<30",
+            "30-60",
+            "60-90",
+            "90-120",
+            "120-300",
+            "300-500",
+            "500-1000",
+            "1000-2000",
+            ">2000"
+            ]
+        vinfo["Nbins"] = len(vinfo["bins"])
     else:
         raise RuntimeError(f"Version {version} not recognized")
     return vinfo
+
+def get_axis_labels(var):
+    if var == "forest_from_ea":
+        axis = "Forested fraction (sum all edge bins)"
+    elif var == "bin_as_frac_allforest":
+        axis = "Fraction of forest in this bin"
+    elif var == "fforest":
+        axis = "Forest-forest fraction"
+    elif var == "croppast":
+        axis = "Crop + pasture fraction"
+    else:
+        axis = var
+    return axis
 
 def import_landcovers(this_dir, version):
     # Import legend
