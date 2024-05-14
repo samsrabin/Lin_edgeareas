@@ -62,7 +62,6 @@ ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
 fig, axs = plt.subplots(
     ny, nx,
     figsize=(figsizex, figsizey),
-    sharex=True,
     )
 Nextra = ny*nx - vinfo["Nbins"]
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
@@ -111,6 +110,13 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     plt.xlabel(lem.get_axis_labels(x))
     plt.ylabel(lem.get_axis_labels(y))
 
+# Get rid of unused axes
+for x in np.arange(nx):
+    for y in np.arange(ny):
+        if not axs[y][x].has_data():
+            fig.delaxes(axs[y][x])
+
+fig.tight_layout()
 plt.show()
     
 
