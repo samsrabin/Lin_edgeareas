@@ -59,19 +59,20 @@ importlib.reload(lem)
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
 sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
 
-# # Portrait
-# nx = 2; figsizex = 11
-# ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
+# Portrait
+nx = 2; figsizex = 11
+ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
 
-# Landscape
-ny = 2; figsizey = 11
-nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
+# # Landscape
+# ny = 2; figsizey = 11
+# nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
 
 fig, axs = plt.subplots(
     ny, nx,
     figsize=(figsizex, figsizey),
     )
 Nextra = ny*nx - vinfo["Nbins"]
+fits = []
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Get dataframe with just this edge, indexed by Year-site
@@ -110,13 +111,14 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     isort = np.argsort(xdata)
     xdata = xdata[isort]
     ydata = ydata[isort]
-    fit, result = lem.fit(xdata, ydata)
-    plt.plot(xdata, result.best_fit, "-k")
+    fit_type, fit = lem.fit(xdata, ydata)
+    fits.append(fit)
+    plt.plot(xdata, fit.best_fit, "-k")
     
     # Add chart info
     plt.legend(title="Site")
     title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
-    title_fit = f"{fit}: r2={np.round(result.rsquared, 3)}"
+    title_fit = f"{fit_type}: r2={np.round(fit.rsquared, 3)}"
     plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(xvar))
     plt.ylabel(lem.get_axis_labels(yvar))
@@ -129,6 +131,23 @@ for x in np.arange(nx):
 
 fig.tight_layout()
 
+# Add lines with adjustments to sum to 1
+tmp = totalareas[totalareas.index.isin(sites_to_include, level="site")]
+tmp = tmp.div(tmp.sitearea, axis=0)
+step = 0.001
+xdata = np.arange(np.min(tmp[xvar]), np.max(tmp[xvar]) + step, step)
+for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    fit = fits[b]
+    ydata = fit.eval(x=xdata)
+    if b==0:
+        ydata_yb = np.expand_dims(ydata, axis=1)
+    else:
+        ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
+ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
+for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    fig.axes[b].plot(xdata, ydata_yb[:,b], '--k')
+
+# Save
 outfile = f"fits.{version}.{xvar}"
 if sites_to_exclude:
     outfile += ".excl"
