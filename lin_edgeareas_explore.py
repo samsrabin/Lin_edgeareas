@@ -48,9 +48,9 @@ totalareas = totalareas.assign(croppast_frac_croppastfor=croppast_frac_croppastf
 
 # X variable
 # xvar = "forest_from_ea"
-# xvar = "fforest"
+xvar = "fforest"
 # xvar = "croppast"
-xvar = "croppast_frac_croppastfor"
+# xvar = "croppast_frac_croppastfor"
 
 # Y variable
 yvar = "bin_as_frac_allforest"
@@ -139,8 +139,8 @@ fig.tight_layout()
 # Add lines with adjustments to sum to 1
 tmp = totalareas[totalareas.index.isin(sites_to_include, level="site")]
 tmp = tmp.div(tmp.sitearea, axis=0)
-step = 0.00001
-xdata = np.arange(np.min(tmp[xvar]), np.max(tmp[xvar]) + step, step)
+step = 0.001
+xdata = np.arange(0, 1 + step, step)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fit = fits[b]
     ydata = fit.eval(x=xdata)
@@ -148,6 +148,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
         ydata_yb = np.expand_dims(ydata, axis=1)
     else: 
         ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
+ydata_yb[ydata_yb < 0] = 0
 ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata, ydata_yb[:,b], '--k')
