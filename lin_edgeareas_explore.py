@@ -94,12 +94,23 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
             kind="scatter",
             )
     
+    # Add best fit
+    xdata = thisedge_df[x].values
+    ydata = thisedge_df[y].values
+    isort = np.argsort(xdata)
+    xdata = xdata[isort]
+    ydata = ydata[isort]
+    fit, result = lem.fit(xdata, ydata)
+    plt.plot(xdata, result.best_fit, "-k")
+    
     # Add chart info
     plt.legend(title="Site")
-    plt.title(f"Bin {bin}: {vinfo['bins'][b]} m")
+    title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
+    title_fit = f"{fit}: r2={np.round(result.rsquared, 3)}"
+    plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(x))
     plt.ylabel(lem.get_axis_labels(y))
-    # break
+
 plt.show()
     
 
