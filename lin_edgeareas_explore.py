@@ -77,30 +77,21 @@ fig, axs = plt.subplots(
     figsize=(figsizex, figsizey),
     )
 Nextra = ny*nx - vinfo["Nbins"]
-fits = []
+
+edgefits = []
+
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Get dataframe with just this edge, indexed by Year-site
-    thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
-    thisedge_df = thisedge_df[thisedge_df.index.isin(sites_to_include, level="site")]
-    thisedge_df = thisedge_df.rename(columns={"sumarea": "bin"})
-    
-    # Join with areas of different land cover types
-    thisedge_df = thisedge_df.join(totalareas)
-    
-    # Convert to fractional area
-    thisedge_df = thisedge_df.div(thisedge_df.sitearea, axis=0)
-    
-    # Get edge bin area as fraction of total forest
-    thisedge_df = thisedge_df.assign(bin_as_frac_allforest=thisedge_df.bin / thisedge_df.forest_from_ea)
+    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_include, b, bin, vinfo)
     
     # Visualize
-    sitelist = [i[1] for i in thisedge_df.index]
+    sitelist = [i[1] for i in ef.thisedge_df.index]
     plt.sca(fig.axes[b])
     for s, site in enumerate(np.unique(sitelist)):
         if site in sites_to_exclude:
             continue
-        thisedgesite_df = thisedge_df[thisedge_df.index.get_level_values("site") == site]
+        thisedgesite_df = ef.thisedge_df[ef.thisedge_df.index.get_level_values("site") == site]
         thisedgesite_df.plot(
             ax=fig.axes[b],
             x=xvar,
@@ -111,22 +102,20 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
             )
     
     # Add best fit
-    xdata = thisedge_df[xvar].values
-    ydata = thisedge_df[yvar].values
-    isort = np.argsort(xdata)
-    xdata = xdata[isort]
-    ydata = ydata[isort]
-    fit_type, fit = lem.fit(xdata, ydata)
-    fits.append(fit)
-    plt.plot(xdata, fit.best_fit, "-k")
+    ef.ef_fit(xvar, yvar)
+    plt.plot(ef.fit_xdata, ef.fit_result.best_fit, "-k")
     
     # Add chart info
     plt.legend(title="Site")
     title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
-    title_fit = f"{fit_type}: r2={np.round(fit.rsquared, 3)}"
+    title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
     plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(xvar))
     plt.ylabel(lem.get_axis_labels(yvar))
+    
+    # Save
+    edgefits.append(ef)
+    print(ef)
 
 # Get rid of unused axes
 for x in np.arange(nx):
@@ -142,8 +131,7 @@ tmp = tmp.div(tmp.sitearea, axis=0)
 step = 0.001
 xdata = np.arange(0, 1 + step, step)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    fit = fits[b]
-    ydata = fit.eval(x=xdata)
+    ydata = edgefits[b].fit_result.eval(x=xdata)
     if b==0:
         ydata_yb = np.expand_dims(ydata, axis=1)
     else: 

@@ -5,6 +5,56 @@ import importlib
 import pandas as pd
 from lmfit import models, fit_report
 
+class EdgeFitType:
+    def __init__(self, edgeareas, totalareas, sites_to_include, b, bin, vinfo):
+        
+        # Get dataframe with just this edge, indexed by Year-site
+        self.thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
+        self.thisedge_df = self.thisedge_df[self.thisedge_df.index.isin(sites_to_include, level="site")]
+        self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
+        
+        # Join with areas of different land cover types
+        self.thisedge_df = self.thisedge_df.join(totalareas)
+        
+        # Convert to fractional area
+        self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
+        
+        # Get edge bin area as fraction of total forest
+        self.thisedge_df = self.thisedge_df.assign(bin_as_frac_allforest=self.thisedge_df.bin / self.thisedge_df.forest_from_ea)
+        
+        # Save other info
+        self.bin_index = b
+        self.bin_number = bin
+        self.bin_name = vinfo["bins"][b]
+
+        # Initialize other members
+        self.fit_xdata = None
+        self.fit_ydata_in = None
+        self.fit_type = None
+        self.fit_result = None
+    
+    def __str__(self):
+        prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
+        if self.fit_result is None:
+            output = prefix + "Not yet fit"
+        else:
+            output = prefix + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
+        return output
+
+    def ef_fit(self, xvar, yvar):
+        
+        # Get X and Y data for fitting
+        self.fit_xdata = self.thisedge_df[xvar].values
+        self.fit_ydata_in = self.thisedge_df[yvar].values
+        
+        # Sort X and Y data (helpful for plotting)
+        isort = np.argsort(self.fit_xdata)
+        self.fit_xdata = self.fit_xdata[isort]
+        self.fit_ydata_in = self.fit_ydata_in[isort]
+        
+        # Get best fit
+        self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata_in)
+
 class LognormalFitParams():
     def __init__(self, center=3.5, sigma=1, amplitude=6):
         self.center = center
