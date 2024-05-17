@@ -49,12 +49,13 @@ croppast_frac_croppastfor = totalareas.croppast / (totalareas.fforest + totalare
 totalareas = totalareas.assign(croppast_frac_croppastfor=croppast_frac_croppastfor)
 
 
-# %% Visualize
+# %% Fit data
+importlib.reload(lem)
 
 # X variable
 # xvar = "forest_from_ea"
-xvar = "fforest"
-# xvar = "croppast"
+# xvar = "fforest"
+xvar = "croppast"
 # xvar = "croppast_frac_croppastfor"
 
 # Y variable
@@ -63,11 +64,23 @@ yvar = "bin_as_frac_allforest"
 # Exclude sites?
 sites_to_exclude = []
 
+# Setup
+sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
+
+edgefits = []
+for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_include, b, bin, vinfo)
+    ef.ef_fit(xvar, yvar)
+    edgefits.append(ef)
+    print(ef)
+print("Done.")
+
+
+# %% Plot with subplots for each bin's scatter and fits
+importlib.reload(lem)
 
 # Setup
-importlib.reload(lem)
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
-sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
 
 # Portrait
 nx = 2; figsizex = 11
@@ -83,12 +96,10 @@ fig, axs = plt.subplots(
     )
 Nextra = ny*nx - vinfo["Nbins"]
 
-edgefits = []
-
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Get dataframe with just this edge, indexed by Year-site
-    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_include, b, bin, vinfo)
+    ef = edgefits[b]
     
     # Visualize
     sitelist = [i[1] for i in ef.thisedge_df.index]
@@ -107,7 +118,6 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
             )
     
     # Add best fit
-    ef.ef_fit(xvar, yvar)
     plt.plot(ef.fit_xdata, ef.fit_result.best_fit, "-k")
     
     # Add chart info
@@ -117,10 +127,6 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(xvar))
     plt.ylabel(lem.get_axis_labels(yvar))
-    
-    # Save
-    edgefits.append(ef)
-    print(ef)
 
 # Get rid of unused axes
 for x in np.arange(nx):
