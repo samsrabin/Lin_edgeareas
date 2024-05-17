@@ -53,7 +53,11 @@ class EdgeFitType:
         self.fit_bootstrapped = bootstrap
         
         # Get X and Y data for fitting
-        self.fit_xdata = self.thisedge_df[xvar].values
+        if xvar == "croppast_frac_croppastfor":
+            self.thisedge_df = self.thisedge_df.assign(croppast_frac_croppastfor=self.thisedge_df.croppast / (self.thisedge_df.fforest + self.thisedge_df.croppast))
+            self.fit_xdata = self.thisedge_df.croppast_frac_croppastfor.values
+        else:
+            self.fit_xdata = self.thisedge_df[xvar].values
         self.fit_ydata_in = self.thisedge_df[yvar].values
         
         # Bootstrap across bins of X-axis to ensure even weighting
@@ -285,6 +289,8 @@ def get_axis_labels(var):
         axis = "Forest-forest fraction"
     elif var == "croppast":
         axis = "Crop + pasture fraction"
+    elif var == "croppast_frac_croppastfor":
+        axis = "Crop + pasture area as fraction of crop+pasture+fforest"
     else:
         axis = var
     return axis

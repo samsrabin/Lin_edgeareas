@@ -45,10 +45,6 @@ for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
 site_area = landcovers.groupby(["Year", "site"]).sum()
 totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
-# (cropland_pasture)/(cropland+pasture+forest)
-croppast_frac_croppastfor = totalareas.croppast / (totalareas.fforest + totalareas.croppast)
-totalareas = totalareas.assign(croppast_frac_croppastfor=croppast_frac_croppastfor)
-
 
 # %% Fit data
 importlib.reload(lem)
