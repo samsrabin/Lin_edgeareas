@@ -153,6 +153,25 @@ def get_site_lc_area(lc, totalareas, landcovers):
     totalareas = totalareas.fillna(value=0)
     return totalareas
 
+
+def get_figure_filepath(this_dir, version, xvar, sites_to_exclude, title):
+    outfile = f"{title}.{version}.{xvar}"
+    if sites_to_exclude:
+        outfile += ".excl"
+        for s, site in enumerate(sites_to_exclude):
+            if s > 0:
+                outfile += ","
+            outfile += str(site)
+    outfile += ".pdf"
+    outpath = os.path.join(
+        this_dir,
+        "inout",
+        version,
+        outfile
+    )
+        
+    return outpath
+
 def get_version_info(version):
     vinfo = {}
     if version == "20240506":

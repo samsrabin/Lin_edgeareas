@@ -141,20 +141,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
-outfile = f"fits_with_scatter.{version}.{xvar}"
-if sites_to_exclude:
-    outfile += ".excl"
-    for s, site in enumerate(sites_to_exclude):
-        if s > 0:
-            outfile += ","
-        outfile += str(site)
-outfile += ".pdf"
-outpath = os.path.join(
-    this_dir,
-    "inout",
-    version,
-    outfile
-    )
+outpath = lem.get_figure_filepath(this_dir, version, xvar, sites_to_exclude, "fits_with_scatter")
 plt.savefig(outpath)
 
 plt.show()
