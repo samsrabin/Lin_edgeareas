@@ -270,9 +270,12 @@ def import_landcovers(this_dir, version):
     return landcovers
 
 
-def predict_multiple_fits(xdata, edgeareas, edgefits):
+def predict_multiple_fits(xdata, edgeareas, edgefits, restrict_x=False):
     for b, bin in enumerate(pd.unique(edgeareas.edge)):
         ydata = edgefits[b].predict(xdata)
+        if restrict_x:
+            ydata[xdata<min(edgefits[b].fit_xdata)] = np.nan
+            ydata[xdata>max(edgefits[b].fit_xdata)] = np.nan
         if b==0:
             ydata_yb = np.expand_dims(ydata, axis=1)
         else: 
