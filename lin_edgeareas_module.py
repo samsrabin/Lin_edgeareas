@@ -54,6 +54,9 @@ class EdgeFitType:
         
         # Get best fit
         self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata_in)
+    
+    def predict(self, xdata):
+        return self.fit_result.eval(x=xdata)
 
 class LognormalFitParams():
     def __init__(self, center=3.5, sigma=1, amplitude=6):

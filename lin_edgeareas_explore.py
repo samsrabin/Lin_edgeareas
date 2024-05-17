@@ -10,6 +10,11 @@ from matplotlib import colormaps
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 version = "20240506"
 
+# %% Setup
+
+step_01 = 0.001
+xdata_01 = np.arange(0, 1 + step_01, step_01)
+
 
 # %% Import data
 importlib.reload(lem)
@@ -126,12 +131,8 @@ for x in np.arange(nx):
 fig.tight_layout()
 
 # Add lines with adjustments to sum to 1
-tmp = totalareas[totalareas.index.isin(sites_to_include, level="site")]
-tmp = tmp.div(tmp.sitearea, axis=0)
-step = 0.001
-xdata = np.arange(0, 1 + step, step)
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    ydata = edgefits[b].fit_result.eval(x=xdata)
+    ydata = edgefits[b].predict(xdata_01)
     if b==0:
         ydata_yb = np.expand_dims(ydata, axis=1)
     else: 
