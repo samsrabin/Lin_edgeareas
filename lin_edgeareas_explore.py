@@ -141,7 +141,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
-outfile = f"fits.{version}.{xvar}"
+outfile = f"fits_with_scatter.{version}.{xvar}"
 if sites_to_exclude:
     outfile += ".excl"
     for s, site in enumerate(sites_to_exclude):
