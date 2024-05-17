@@ -2,3 +2,4 @@
 inout/
 *.swp
 __pycache__
+.Rhistory
