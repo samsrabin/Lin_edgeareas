@@ -63,12 +63,15 @@ xvar = "croppast"
 yvar = "bin_as_frac_allforest"
 
 # Exclude sites?
-sites_to_exclude = []
+sites_to_exclude = [4]
+
+# Bootstrap resample to ensure even sampling across X-axis?
+bootstrap = False
 
 edgefits = []
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, bin, vinfo)
-    ef.ef_fit(xvar, yvar)
+    ef.ef_fit(xvar, yvar, bootstrap)
     edgefits.append(ef)
     print(ef)
 print("Done.")
@@ -116,7 +119,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
             )
     
     # Add best fit
-    plt.plot(ef.fit_xdata, ef.fit_result.best_fit, "-k")
+    plt.plot(ef.fit_xdata, ef.predict(ef.fit_xdata), "-k")
     
     # Add chart info
     plt.legend(title="Site")
@@ -142,7 +145,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
-outpath = lem.get_figure_filepath(this_dir, version, xvar, sites_to_exclude, "fits_with_scatter")
+outpath = lem.get_figure_filepath(this_dir, version, edgefits[0], "fits_with_scatter")
 plt.savefig(outpath)
 
 plt.show()
@@ -171,7 +174,7 @@ plt.xlabel(lem.get_axis_labels(xvar))
 plt.ylabel(lem.get_axis_labels(yvar))
 plt.title("Raw (solid) and adjusted (dashed) predictions")
 
-outpath = lem.get_figure_filepath(this_dir, version, xvar, sites_to_exclude, "fit_lines_1plot")
+outpath = lem.get_figure_filepath(this_dir, version, edgefits[0], "fit_lines_1plot")
 plt.savefig(outpath)
 
 plt.show()

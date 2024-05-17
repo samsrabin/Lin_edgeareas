@@ -35,6 +35,9 @@ class EdgeFitType:
         self.fit_ydata_in = None
         self.fit_type = None
         self.fit_result = None
+        self.fit_bootstrapped = None
+        self.fit_xvar = None
+        self.fit_yvar = None
     
     def __str__(self):
         prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
@@ -44,11 +47,42 @@ class EdgeFitType:
             output = prefix + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
         return output
 
-    def ef_fit(self, xvar, yvar):
+    def ef_fit(self, xvar, yvar, bootstrap):
+        self.fit_xvar = xvar
+        self.fit_yvar = yvar
+        self.fit_bootstrapped = bootstrap
         
         # Get X and Y data for fitting
         self.fit_xdata = self.thisedge_df[xvar].values
         self.fit_ydata_in = self.thisedge_df[yvar].values
+        
+        # Bootstrap across bins of X-axis to ensure even weighting
+        if bootstrap:
+            N_xbins = 10
+            x_max = max(self.fit_xdata)
+            x_min = min(self.fit_xdata)
+            step = (x_max - x_min) / (N_xbins)
+            bin_boundaries = np.arange(x_min, x_max+step, step)
+            xdata = np.array([])
+            ydata = np.array([])
+            for b in np.arange(N_xbins):
+                lo = bin_boundaries[b]
+                hi = bin_boundaries[b+1]
+                if b == N_xbins - 1:
+                    cond_hi = self.fit_xdata <= hi
+                else:
+                    cond_hi = self.fit_xdata < hi
+                cond = cond_hi & (self.fit_xdata >= lo)
+                if not any(cond):
+                    continue
+                bin_data = self.fit_xdata[np.where(cond)[0]]
+                rng = np.random.default_rng(seed=1987)
+                chosen = rng.choice(np.arange(np.sum(cond)), 100)
+                xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
+                ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
+        else:
+            xdata = self.fit_xdata
+            ydata = self.fit_ydata_in
         
         # Sort X and Y data (helpful for plotting)
         isort = np.argsort(self.fit_xdata)
@@ -56,7 +90,7 @@ class EdgeFitType:
         self.fit_ydata_in = self.fit_ydata_in[isort]
         
         # Get best fit
-        self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata_in)
+        self.fit_type, self.fit_result = fit(xdata, ydata)
     
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
@@ -202,14 +236,16 @@ def get_site_lc_area(lc, totalareas, landcovers):
     return totalareas
 
 
-def get_figure_filepath(this_dir, version, xvar, sites_to_exclude, title):
-    outfile = f"{title}.{version}.{xvar}"
-    if sites_to_exclude:
+def get_figure_filepath(this_dir, version, ef, title):
+    outfile = f"{title}.{version}.{ef.fit_xvar}"
+    if ef.sites_to_exclude:
         outfile += ".excl"
-        for s, site in enumerate(sites_to_exclude):
+        for s, site in enumerate(ef.sites_to_exclude):
             if s > 0:
                 outfile += ","
             outfile += str(site)
+    if ef.fit_bootstrapped:
+        outfile += ".bs"
     outfile += ".pdf"
     outpath = os.path.join(
         this_dir,
