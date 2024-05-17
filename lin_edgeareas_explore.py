@@ -25,6 +25,7 @@ vinfo = lem.get_version_info(version)
 # Import edge areas
 filename_template = os.path.join(this_dir, "inout", version, f"Edgearea_clean_%d.csv")
 edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
+edgeareas = lem.add_missing_bins(edgeareas)
 
 # Import land covers
 landcovers = lem.import_landcovers(this_dir, version)
