@@ -120,6 +120,26 @@ def _fit_exponential(xdata, ydata):
     # print(" ")
     return result
 
+def _fit_gaussian(xdata, ydata):
+    model = models.GaussianModel()
+    params = model.guess(ydata, x=xdata, seed=1987)
+    result = model.fit(ydata, params, x=xdata)
+
+    # print("Gaussian:")
+    # print(fit_report(result))
+    # print(" ")
+    return result
+
+def _fit_skewgaussian(xdata, ydata):
+    model = models.SkewedGaussianModel()
+    params = model.guess(ydata, x=xdata, seed=1987)
+    result = model.fit(ydata, params, x=xdata)
+
+    # print("Skewed Gaussian:")
+    # print(fit_report(result))
+    # print(" ")
+    return result
+
 def _fit_logistic(xdata, ydata):
     model = models.StepModel(form="logistic")
     params = model.guess(ydata, x=xdata, seed=1987)
@@ -159,6 +179,8 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
     results["exponential"] = _fit_exponential(xdata, ydata)
     results["linear"] = _fit_linear(xdata, ydata)
     results["quadratic"] = _fit_quadratic(xdata, ydata)
+    results["gaussian"] = _fit_gaussian(xdata, ydata)
+    results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
     
     # Find best fit
     best_fit = None
