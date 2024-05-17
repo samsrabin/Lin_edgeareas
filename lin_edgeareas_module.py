@@ -6,7 +6,9 @@ import pandas as pd
 from lmfit import models, fit_report
 
 class EdgeFitType:
-    def __init__(self, edgeareas, totalareas, sites_to_include, b, bin, vinfo):
+    def __init__(self, edgeareas, totalareas, sites_to_exclude, b, bin, vinfo):
+        
+        sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
         
         # Get dataframe with just this edge, indexed by Year-site
         self.thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
@@ -26,6 +28,7 @@ class EdgeFitType:
         self.bin_index = b
         self.bin_number = bin
         self.bin_name = vinfo["bins"][b]
+        self.sites_to_exclude = sites_to_exclude
 
         # Initialize other members
         self.fit_xdata = None

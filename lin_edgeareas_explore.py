@@ -64,12 +64,9 @@ yvar = "bin_as_frac_allforest"
 # Exclude sites?
 sites_to_exclude = []
 
-# Setup
-sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
-
 edgefits = []
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_include, b, bin, vinfo)
+    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, bin, vinfo)
     ef.ef_fit(xvar, yvar)
     edgefits.append(ef)
     print(ef)
