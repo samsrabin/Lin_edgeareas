@@ -131,16 +131,11 @@ for x in np.arange(nx):
 fig.tight_layout()
 
 # Add lines with adjustments to sum to 1
+ydata_adj_yb = lem.adjust_predicted_fits(
+    lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
+    )
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    ydata = edgefits[b].predict(xdata_01)
-    if b==0:
-        ydata_yb = np.expand_dims(ydata, axis=1)
-    else: 
-        ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
-ydata_yb[ydata_yb < 0] = 0
-ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
-for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    fig.axes[b].plot(xdata, ydata_yb[:,b], '--k')
+    fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
 outfile = f"fits.{version}.{xvar}"

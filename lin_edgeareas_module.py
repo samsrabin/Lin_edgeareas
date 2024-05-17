@@ -58,6 +58,13 @@ class EdgeFitType:
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
 
+
+def adjust_predicted_fits(ydata_yb):
+    ydata_yb[ydata_yb < 0] = 0
+    ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
+    return ydata_yb
+
+
 class LognormalFitParams():
     def __init__(self, center=3.5, sigma=1, amplitude=6):
         self.center = center
@@ -239,6 +246,16 @@ def import_landcovers(this_dir, version):
         )
     
     return landcovers
+
+
+def predict_multiple_fits(xdata, edgeareas, edgefits):
+    for b, bin in enumerate(pd.unique(edgeareas.edge)):
+        ydata = edgefits[b].predict(xdata)
+        if b==0:
+            ydata_yb = np.expand_dims(ydata, axis=1)
+        else: 
+            ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
+    return ydata_yb
 
 
 def read_combine_multiple_csvs(filename_template, version):
