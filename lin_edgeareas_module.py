@@ -262,7 +262,7 @@ def get_figure_filepath(this_dir, version, ef, title):
 
 def get_version_info(version):
     vinfo = {}
-    if int(version) == 20240506:
+    if int(version) in [20240506, 20240605]:
         vinfo["Nsites"] = 4
         vinfo["bins"] = [
             "<30",
@@ -295,10 +295,15 @@ def get_axis_labels(var):
         axis = var
     return axis
 
-def import_landcovers(this_dir, version):
+
+def read_landcovers_legend(this_dir):
+    landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
+    return landcovers_legend
+
+def import_landcovers_20240506(this_dir, version):
     
     # Import legend
-    landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
+    landcovers_legend = read_landcovers_legend(this_dir)
     
     # Import landcovers
     filename_template = os.path.join(this_dir, "inout", version, f"Landcover_clean_%d.csv")
@@ -306,6 +311,11 @@ def import_landcovers(this_dir, version):
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
     
     # Add labels
+    landcovers = label_landcovers(landcovers_legend, landcovers)
+    
+    return landcovers
+
+def label_landcovers(landcovers_legend, landcovers):
     landcovers = landcovers.assign(tmp = landcovers.landcover_num)
     landcovers = landcovers.set_index("tmp").join(landcovers_legend.set_index("landcover_num"))
     
@@ -324,14 +334,21 @@ def import_landcovers(this_dir, version):
     is_unvegd = []
     is_vegd = []
     is_unobs = []
+    is_unknown = []
+    unknown_types = []
     for i, num in enumerate(landcovers.landcover_num):
-        
         # Get landcover string for this landcover code
         matching_landcovers = landcovers_legend[landcovers_legend.landcover_num == num]
         Nmatches = matching_landcovers.shape[0]
-        if Nmatches != 1:
+        if Nmatches == 0:
+            if num not in unknown_types:
+                unknown_types.append(num)
+                print(f"Landcover {num} unknown")
+            landcover_str = "unknown"
+        elif Nmatches != 1:
             raise RuntimeError(f"Expected 1 landcover matching {num}; found {Nmatches}")
-        landcover_str = matching_landcovers.landcover_str.values[0]
+        else:
+            landcover_str = matching_landcovers.landcover_str.values[0]
         
         # Classify based on landcover string
         is_water.append("#5" in landcover_str)
@@ -344,6 +361,8 @@ def import_landcovers(this_dir, version):
         is_unvegd.append("#4" in landcover_str)
         is_vegd.append(not is_water[i] and not is_unvegd[i])
         is_unobs.append("#6" in landcover_str)
+        is_unknown.append(Nmatches == 0)
+        
 
     landcovers = landcovers.assign(
         is_water=is_water,
@@ -356,8 +375,9 @@ def import_landcovers(this_dir, version):
         is_unvegd=is_unvegd,
         is_vegd=is_vegd,
         is_unobs=is_unobs,
+        is_unknown=is_unknown,
         )
-    
+        
     return landcovers
 
 
@@ -393,3 +413,27 @@ def read_combine_multiple_csvs(filename_template, version):
 
     df_combined = pd.concat(df_combined)
     return df_combined
+
+def read_20240605(this_dir, filename_csv):
+    df = pd.read_csv(filename_csv)
+    df = df.rename(columns={
+        "totalareas": "sumarea",
+        "gridID": "site",
+        "year": "Year",
+        })
+    
+    first_edge_class = 51
+    last_edge_class = 59
+    is_edge_class = (df["landcover"] >= first_edge_class) & (df["landcover"] <= last_edge_class)
+    
+    edgeareas = df[is_edge_class]
+    edgeareas = edgeareas.rename(columns={"landcover": "edge"})
+    edgeareas.edge -= first_edge_class - 1  # Change to edge bin numbers 1-9
+    
+    landcovers = df[~is_edge_class]
+    landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
+    landcovers = label_landcovers(read_landcovers_legend(this_dir), landcovers)
+    print(landcovers.head())
+    print(landcovers.tail())
+
+    return edgeareas, landcovers

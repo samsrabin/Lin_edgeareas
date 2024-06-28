@@ -15,7 +15,8 @@ from matplotlib import pyplot as plt
 from matplotlib import colormaps
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-version = 20240506
+# version = 20240506
+version = 20240605
 
 # %% Setup
 
@@ -32,20 +33,37 @@ importlib.reload(lem)
 # Get version info
 vinfo = lem.get_version_info(version)
 
-# Import edge areas
-filename_template = os.path.join(this_dir, "inout", version_str, f"Edgearea_clean_%d.csv")
-edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
-edgeareas = lem.add_missing_bins(edgeareas)
-
-# Import land covers
-landcovers = lem.import_landcovers(this_dir, version_str)
+# Import edge areas and land covers
+if version == 20240506:
+    filename_template = os.path.join(this_dir, "inout", version_str, f"Edgearea_clean_%d.csv")
+    edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
+    edgeareas = lem.add_missing_bins(edgeareas)
+    landcovers = lem.import_landcovers_20240506(this_dir, version_str)
+elif version == 20240605:
+    filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam.csv")
+    edgeareas, landcovers = lem.read_20240605(this_dir, filename)
+else:
+    raise RuntimeError(f"Version {version} not recognized")
 
 
 # %% Get derived information
 importlib.reload(lem)
 
 # Total forest area (from Lin's edgeareas files)
-totalareas = edgeareas.groupby(["Year", "site"]).sum().drop(columns="edge").rename(columns={"sumarea": "forest_from_ea"})
+totalareas = edgeareas.drop(columns="edge")
+if version == 20240506:
+    totalareas = totalareas.groupby(["Year", "site"])
+elif version == 20240605:
+    totalareas = totalareas.groupby(["Year", "site", "ecoregion"])
+else:
+    raise RuntimeError(f"Version {version} not recognized")
+totalareas = totalareas.sum().rename(columns={"sumarea": "forest_from_ea"})
+if version == 20240506:
+    pass
+elif version == 20240605:
+    totalareas = totalareas.reset_index(level="ecoregion")
+else:
+    raise RuntimeError(f"Version {version} not recognized")
 
 # Total derived areas (from landcovers)
 for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
