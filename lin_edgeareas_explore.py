@@ -1,5 +1,12 @@
 # %% Setup
 
+# Logically it seems like, if a bin has zero area, all deeper bins should also be zero. It looks like this is wrong in the fits: compare bins 7 and 8 at x > 0.8 in fits.20240506.croppast.pdf.
+### Maybe not? Remember that Lin is only counting as "edge" that forest next to crop or pasture. One could imagine nonforest-nonagriculture taking up all of e.g. 500-1000m band. But seems unlikely!
+# Is this ever true in the real sites?
+# Is this avoidable in the fits?
+# If not, how to handle in the model? Just set all deeper bins to zero? (Show this in plots.)
+
+
 import pandas as pd
 import numpy as np
 import importlib
@@ -12,6 +19,7 @@ version = "20240506"
 
 # %% Setup
 
+# For making plots of predicted values across entire 0-1 range of X-axis
 step_01 = 0.001
 xdata_01 = np.arange(0, 1 + step_01, step_01)
 
@@ -79,13 +87,13 @@ importlib.reload(lem)
 # Setup
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
 
-# Portrait
-nx = 2; figsizex = 11
-ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
+# # Portrait
+# nx = 2; figsizex = 11
+# ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
 
-# # Landscape
-# ny = 2; figsizey = 11
-# nx = int(np.ceil(vinfo["Nbins"]/2)); figsizex = 22
+# Landscape
+ny = 3; figsizey = 11
+nx = int(np.ceil(vinfo["Nbins"]/ny)); figsizex = 15
 
 fig, axs = plt.subplots(
     ny, nx,
@@ -159,9 +167,9 @@ ydata_adj_yb = lem.adjust_predicted_fits(
     lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
     )
 
-for b, bin in enumerate(vinfo["bins"]):
-    color = get_color(vinfo, b)
-    plt.plot(xdata_01, ydata_yb[:,b], color=color)
+# for b, bin in enumerate(vinfo["bins"]):
+#     color = get_color(vinfo, b)
+#     plt.plot(xdata_01, ydata_yb[:,b], color=color)
 for b, bin in enumerate(vinfo["bins"]):
     color = get_color(vinfo, b)
     plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
