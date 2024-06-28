@@ -15,9 +15,11 @@ from matplotlib import pyplot as plt
 from matplotlib import colormaps
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-version = "20240506"
+version = 20240506
 
 # %% Setup
+
+version_str = str(version)
 
 # For making plots of predicted values across entire 0-1 range of X-axis
 step_01 = 0.001
@@ -31,12 +33,12 @@ importlib.reload(lem)
 vinfo = lem.get_version_info(version)
 
 # Import edge areas
-filename_template = os.path.join(this_dir, "inout", version, f"Edgearea_clean_%d.csv")
+filename_template = os.path.join(this_dir, "inout", version_str, f"Edgearea_clean_%d.csv")
 edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
 edgeareas = lem.add_missing_bins(edgeareas)
 
 # Import land covers
-landcovers = lem.import_landcovers(this_dir, version)
+landcovers = lem.import_landcovers(this_dir, version_str)
 
 
 # %% Get derived information
@@ -149,7 +151,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
-outpath = lem.get_figure_filepath(this_dir, version, edgefits[0], "fits_with_scatter")
+outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter")
 plt.savefig(outpath)
 
 plt.show()
@@ -178,7 +180,7 @@ plt.xlabel(lem.get_axis_labels(xvar))
 plt.ylabel(lem.get_axis_labels(yvar))
 plt.title("Raw (solid) and adjusted (dashed) predictions")
 
-outpath = lem.get_figure_filepath(this_dir, version, edgefits[0], "fit_lines_1plot")
+outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot")
 plt.savefig(outpath)
 
 plt.show()

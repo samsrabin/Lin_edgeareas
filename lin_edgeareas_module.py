@@ -262,7 +262,7 @@ def get_figure_filepath(this_dir, version, ef, title):
 
 def get_version_info(version):
     vinfo = {}
-    if version == "20240506":
+    if int(version) == 20240506:
         vinfo["Nsites"] = 4
         vinfo["bins"] = [
             "<30",
@@ -296,6 +296,7 @@ def get_axis_labels(var):
     return axis
 
 def import_landcovers(this_dir, version):
+    
     # Import legend
     landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
     
