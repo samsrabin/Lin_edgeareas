@@ -432,20 +432,39 @@ def read_20240605(this_dir, filename_csv):
         "gridID": "site",
         "year": "Year",
         })
+    landcovers_legend = read_landcovers_legend(this_dir)
     
+    # Get MapBiomas type of formação florestal
+    fforest_idx = np.where(["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]])[0]
+    if len(fforest_idx) != 1:
+        raise RuntimeError(f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}")
+    fforest_idx = fforest_idx[0]
+    fforest_num = landcovers_legend["landcover_num"][fforest_idx]
+    
+    # Which rows are edge classes?
     first_edge_class = 51
     last_edge_class = 59
     is_edge_class = (df["landcover"] >= first_edge_class) & (df["landcover"] <= last_edge_class)
     
+    # Get DataFrame with just edge classes
     edgeareas = df[is_edge_class]
     edgeareas = edgeareas.rename(columns={"landcover": "edge"})
     edgeareas.edge -= first_edge_class - 1  # Change to edge bin numbers 1-9
     
+    # Get formação florestal area
+    tmp_indices = ["site", "ecoregion", "forestcover", "Year"]
+    fforest = edgeareas.groupby(tmp_indices).sum()
+    fforest = fforest.reset_index(level=tmp_indices)
+    fforest = fforest.drop(columns="edge")
+    fforest = fforest.assign(landcover=fforest_num)
+    
+    # Get landcovers
     landcovers = df[~is_edge_class]
+    landcovers = pd.concat((landcovers, fforest)) # include formação florestal
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
-    landcovers = label_landcovers(read_landcovers_legend(this_dir), landcovers)
+    landcovers = label_landcovers(landcovers_legend, landcovers)
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
     print(landcovers.head())
