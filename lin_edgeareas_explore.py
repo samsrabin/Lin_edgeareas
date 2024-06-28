@@ -45,6 +45,12 @@ elif version == 20240605:
 else:
     raise RuntimeError(f"Version {version} not recognized")
 
+# There should be no NaNs
+if any(edgeareas.isna().sum()):
+    raise RuntimeError("NaN(s) found in edgeareas")
+if any(landcovers.isna().sum()):
+    raise RuntimeError("NaN(s) found in landcovers")
+
 
 # %% Get derived information
 importlib.reload(lem)
@@ -73,6 +79,17 @@ for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
 site_area = landcovers.groupby(["Year", "site"]).sum()
 totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
+# There should be no NaNs
+if any(totalareas.isna().sum()):
+    if any(totalareas["sitearea"].isna()):
+        print("Sites/gridIDs missing landcovers outside 51-59:")
+        yearsites_missing = totalareas[totalareas["sitearea"].isna()]
+        years_missing = np.array([x[0] for x in yearsites_missing.index])
+        sites_missing = np.array([x[1] for x in yearsites_missing.index])
+        for y in np.unique(years_missing):
+            sites_missing_thisyear = sites_missing[years_missing==y]
+            print(f"   Year {y}: {sites_missing_thisyear}")
+    raise RuntimeError("NaN(s) found in totalareas")
 
 # %% Fit data
 importlib.reload(lem)

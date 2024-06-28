@@ -319,9 +319,20 @@ def label_landcovers(landcovers_legend, landcovers):
     landcovers = landcovers.assign(tmp = landcovers.landcover_num)
     landcovers = landcovers.set_index("tmp").join(landcovers_legend.set_index("landcover_num"))
     
+    # Handle any types in landcovers but not landcovers_legend
+    unknown_str = "unknown"
+    landcovers["landcover_str"] = landcovers["landcover_str"].fillna(unknown_str)
+
+    # There should be no remaining NaNs
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
+    
     # Regenerate index
     index = np.arange(len(landcovers.index))
     landcovers = landcovers.set_index(index)
+    
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
     
     # Add legend-based info
     is_water = []
@@ -344,7 +355,7 @@ def label_landcovers(landcovers_legend, landcovers):
             if num not in unknown_types:
                 unknown_types.append(num)
                 print(f"Landcover {num} unknown")
-            landcover_str = "unknown"
+            landcover_str = unknown_str
         elif Nmatches != 1:
             raise RuntimeError(f"Expected 1 landcover matching {num}; found {Nmatches}")
         else:
@@ -432,7 +443,11 @@ def read_20240605(this_dir, filename_csv):
     
     landcovers = df[~is_edge_class]
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
     landcovers = label_landcovers(read_landcovers_legend(this_dir), landcovers)
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
     print(landcovers.head())
     print(landcovers.tail())
 
