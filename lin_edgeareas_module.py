@@ -243,7 +243,7 @@ def get_site_lc_area(lc, totalareas, landcovers):
     return totalareas
 
 
-def get_figure_filepath(this_dir, version, ef, title):
+def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
     outfile = f"{title}.{version}.{ef.fit_xvar}"
     if ef.sites_to_exclude:
         outfile += ".excl"
@@ -253,6 +253,7 @@ def get_figure_filepath(this_dir, version, ef, title):
             outfile += str(site)
     if ef.fit_bootstrapped:
         outfile += ".bs"
+    outfile += "." + figfile_suffix
     outfile += ".pdf"
     outpath = os.path.join(
         this_dir,
@@ -503,7 +504,7 @@ def get_color(vinfo, b):
     color = colormaps["jet_r"](b/(vinfo["Nbins"]-1))
     return color
 
-def plot_fits_1plot(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
+def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
     ydata_yb = predict_multiple_fits(xdata_01, edgeareas, edgefits, restrict_x=True)
     ydata_adj_yb = adjust_predicted_fits(
     predict_multiple_fits(xdata_01, edgeareas, edgefits)
@@ -520,7 +521,7 @@ def plot_fits_1plot(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yva
     plt.ylabel(get_axis_labels(yvar))
     plt.title("Raw (solid) and adjusted (dashed) predictions")
 
-    outpath = get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot")
+    outpath = get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot", figfile_suffix)
     plt.savefig(outpath)
 
     plt.show()

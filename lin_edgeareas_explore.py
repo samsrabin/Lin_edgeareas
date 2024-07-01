@@ -94,7 +94,8 @@ xvar = "croppast"
 yvar = "bin_as_frac_allforest"
 
 # Exclude sites?
-sites_to_exclude = [4]
+# sites_to_exclude = [4]
+sites_to_exclude = []
 
 # Bootstrap resample to ensure even sampling across X-axis?
 bootstrap = False
@@ -105,6 +106,21 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     ef.ef_fit(xvar, yvar, bootstrap)
     edgefits.append(ef)
     print(ef)
+
+# Get figure filename suffix
+figfile_suffix = ".".join([
+    xvar,
+    yvar,
+])
+if sites_to_exclude:
+    figfile_suffix = figfile_suffix + "." + ",".join(
+        [str(x)for x in sites_to_exclude]
+    )
+
+# Save summary figure
+importlib.reload(lem)
+lem.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
+
 print("Done.")
 
 
@@ -176,7 +192,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
 
 # Save
-outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter")
+outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix)
 plt.savefig(outpath)
 
 plt.show()
@@ -185,7 +201,6 @@ plt.show()
 # %% All fits and adjusted fits on one plot
 importlib.reload(lem)
 
-lem.plot_fits_1plot(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
 
 
 # %% Query a single point
