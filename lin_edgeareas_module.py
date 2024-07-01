@@ -432,9 +432,33 @@ def read_20240605(this_dir, filename_csv):
         "gridID": "site",
         "year": "Year",
         })
-    landcovers_legend = read_landcovers_legend(this_dir)
+    
+    # ecoregion should be unique per site
+    site_info = df[["site", "ecoregion"]]
+    groupvars = "site"
+    if any(site_info.groupby(groupvars)["ecoregion"].nunique() > 1):
+        print("ecoregion not unique per site. Skipping site_info.")
+        site_info = None
+    else:
+        site_info = site_info.groupby(groupvars).mean()
+        site_info = site_info.astype(int)
+    df = df.drop(columns="ecoregion")
+    
+    # forestcover should be unique per site-year
+    # 424 = 4.24%
+    siteyear_info = df[["site", "Year", "forestcover"]]
+    groupvars = ["site", "Year"]
+    if any(siteyear_info.groupby(groupvars)["forestcover"].nunique() > 1):
+        print("forestcover not unique per site-year. Skipping siteyear_info.")
+        siteyear_info = None
+    else:
+        siteyear_info = siteyear_info.groupby(groupvars).mean()
+        siteyear_info["forestcover"] *= 1e-4  # Convert to fraction
+        siteyear_info = siteyear_info.rename(columns={"forestcover": "forestcover_frac"})
+    df = df.drop(columns="forestcover")
     
     # Get MapBiomas type of formação florestal
+    landcovers_legend = read_landcovers_legend(this_dir)
     fforest_idx = np.where(["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]])[0]
     if len(fforest_idx) != 1:
         raise RuntimeError(f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}")
@@ -452,7 +476,7 @@ def read_20240605(this_dir, filename_csv):
     edgeareas.edge -= first_edge_class - 1  # Change to edge bin numbers 1-9
     
     # Get formação florestal area
-    tmp_indices = ["site", "ecoregion", "forestcover", "Year"]
+    tmp_indices = ["site", "Year"]
     fforest = edgeareas.groupby(tmp_indices).sum()
     fforest = fforest.reset_index(level=tmp_indices)
     fforest = fforest.drop(columns="edge")
@@ -470,4 +494,4 @@ def read_20240605(this_dir, filename_csv):
     print(landcovers.head())
     print(landcovers.tail())
 
-    return edgeareas, landcovers
+    return site_info, siteyear_info, edgeareas, landcovers

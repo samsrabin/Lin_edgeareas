@@ -42,7 +42,7 @@ if version == 20240506:
     landcovers = lem.import_landcovers_20240506(this_dir, version_str)
 elif version == 20240605:
     filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam.csv")
-    edgeareas, landcovers = lem.read_20240605(this_dir, filename)
+    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(this_dir, filename)
 else:
     raise RuntimeError(f"Version {version} not recognized")
 
@@ -58,19 +58,8 @@ importlib.reload(lem)
 
 # Total forest area (from Lin's edgeareas files)
 totalareas = edgeareas.drop(columns="edge")
-if version == 20240506:
-    totalareas = totalareas.groupby(["Year", "site"])
-elif version == 20240605:
-    totalareas = totalareas.groupby(["Year", "site", "ecoregion"])
-else:
-    raise RuntimeError(f"Version {version} not recognized")
+totalareas = totalareas.groupby(["Year", "site"])
 totalareas = totalareas.sum().rename(columns={"sumarea": "forest_from_ea"})
-if version == 20240506:
-    pass
-elif version == 20240605:
-    totalareas = totalareas.reset_index(level="ecoregion")
-else:
-    raise RuntimeError(f"Version {version} not recognized")
 
 # Total derived areas (from landcovers)
 for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
