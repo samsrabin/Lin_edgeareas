@@ -3,3 +3,5 @@ inout/
 *.swp
 __pycache__
 .Rhistory
+*pdf
+*png
