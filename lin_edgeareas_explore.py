@@ -185,30 +185,7 @@ plt.show()
 # %% All fits and adjusted fits on one plot
 importlib.reload(lem)
 
-def get_color(vinfo, b):
-    color = colormaps["jet_r"](b/(vinfo["Nbins"]-1))
-    return color
-
-ydata_yb = lem.predict_multiple_fits(xdata_01, edgeareas, edgefits, restrict_x=True)
-ydata_adj_yb = lem.adjust_predicted_fits(
-    lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
-    )
-
-# for b, bin in enumerate(vinfo["bins"]):
-#     color = get_color(vinfo, b)
-#     plt.plot(xdata_01, ydata_yb[:,b], color=color)
-for b, bin in enumerate(vinfo["bins"]):
-    color = get_color(vinfo, b)
-    plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
-plt.legend(vinfo["bins"])
-plt.xlabel(lem.get_axis_labels(xvar))
-plt.ylabel(lem.get_axis_labels(yvar))
-plt.title("Raw (solid) and adjusted (dashed) predictions")
-
-outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot")
-plt.savefig(outpath)
-
-plt.show()
+lem.plot_fits_1plot(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
 
 
 # %% Query a single point

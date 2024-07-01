@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import importlib
 import pandas as pd
 from lmfit import models, fit_report
+from matplotlib import colormaps
 
 class EdgeFitType:
     def __init__(self, edgeareas, totalareas, sites_to_exclude, b, bin, vinfo):
@@ -497,3 +498,29 @@ def read_20240605(this_dir, filename_csv):
     print(landcovers.tail())
 
     return site_info, siteyear_info, edgeareas, landcovers
+
+def get_color(vinfo, b):
+    color = colormaps["jet_r"](b/(vinfo["Nbins"]-1))
+    return color
+
+def plot_fits_1plot(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
+    ydata_yb = predict_multiple_fits(xdata_01, edgeareas, edgefits, restrict_x=True)
+    ydata_adj_yb = adjust_predicted_fits(
+    predict_multiple_fits(xdata_01, edgeareas, edgefits)
+    )
+
+    # for b, bin in enumerate(vinfo["bins"]):
+    #     color = get_color(vinfo, b)
+    #     plt.plot(xdata_01, ydata_yb[:,b], color=color)
+    for b, bin in enumerate(vinfo["bins"]):
+        color = get_color(vinfo, b)
+        plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
+    plt.legend(vinfo["bins"])
+    plt.xlabel(get_axis_labels(xvar))
+    plt.ylabel(get_axis_labels(yvar))
+    plt.title("Raw (solid) and adjusted (dashed) predictions")
+
+    outpath = get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot")
+    plt.savefig(outpath)
+
+    plt.show()
