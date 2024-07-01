@@ -13,6 +13,7 @@ import importlib
 import lin_edgeareas_module as lem
 from matplotlib import pyplot as plt
 from matplotlib import colormaps
+import os
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 # version = 20240506
