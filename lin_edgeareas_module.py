@@ -337,45 +337,45 @@ def label_landcovers(landcovers_legend, landcovers):
         raise RuntimeError("NaN(s) found in landcovers")
     
     # Add legend-based info
-    is_water = []
-    is_forest = []
-    is_fforest = []
-    is_crop = []
-    is_pasture = []
-    is_croppast = []
-    is_agri = []
-    is_unvegd = []
-    is_vegd = []
-    is_unobs = []
-    is_unknown = []
+    is_water = np.full(landcovers.landcover_num.shape, False)
+    is_forest = is_water.copy()
+    is_fforest = is_water.copy()
+    is_crop = is_water.copy()
+    is_pasture = is_water.copy()
+    is_croppast = is_water.copy()
+    is_agri = is_water.copy()
+    is_unvegd = is_water.copy()
+    is_vegd = is_water.copy()
+    is_unobs = is_water.copy()
+    is_unknown = is_water.copy()
     unknown_types = []
-    for i, num in enumerate(landcovers.landcover_num):
+    for num in landcovers["landcover_num"].unique():
         # Get landcover string for this landcover code
         matching_landcovers = landcovers_legend[landcovers_legend.landcover_num == num]
         Nmatches = matching_landcovers.shape[0]
         if Nmatches == 0:
-            if num not in unknown_types:
-                unknown_types.append(num)
-                print(f"Landcover {num} unknown")
+            unknown_types.append(num)
             landcover_str = unknown_str
         elif Nmatches != 1:
             raise RuntimeError(f"Expected 1 landcover matching {num}; found {Nmatches}")
         else:
             landcover_str = matching_landcovers.landcover_str.values[0]
-        
+
         # Classify based on landcover string
-        is_water.append("#5" in landcover_str)
-        is_forest.append("#1" in landcover_str)
-        is_fforest.append("#1.1" in landcover_str)
-        is_crop.append("#3.2" in landcover_str)
-        is_pasture.append("#3.1" in landcover_str)
-        is_croppast.append(is_crop[i] or is_pasture[i] or "3.4" in landcover_str)
-        is_agri.append("#3" in landcover_str)
-        is_unvegd.append("#4" in landcover_str)
-        is_vegd.append(not is_water[i] and not is_unvegd[i])
-        is_unobs.append("#6" in landcover_str)
-        is_unknown.append(Nmatches == 0)
-        
+        where_this_landcover = np.where(landcovers["landcover_num"] == num)
+        is_water[where_this_landcover] = "#5" in landcover_str
+        is_forest[where_this_landcover] = "#1" in landcover_str
+        is_fforest[where_this_landcover] = "#1.1" in landcover_str
+        is_crop[where_this_landcover] = "#3.2" in landcover_str
+        is_pasture[where_this_landcover] = "#3.1" in landcover_str
+        is_croppast[where_this_landcover] = "3.4" in landcover_str
+        is_agri[where_this_landcover] = "#3" in landcover_str
+        is_unvegd[where_this_landcover] = "#4" in landcover_str
+        is_unobs[where_this_landcover] = "#6" in landcover_str
+        is_unknown[where_this_landcover] = Nmatches == 0
+
+    is_croppast = is_croppast | is_crop | is_pasture
+    is_vegd = ~is_water & ~is_unvegd
 
     landcovers = landcovers.assign(
         is_water=is_water,
