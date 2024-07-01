@@ -90,8 +90,8 @@ importlib.reload(lem)
 # X variable
 # xvar = "forest_from_ea"
 # xvar = "fforest"
-xvar = "croppast"
-# xvar = "croppast_frac_croppastfor"
+# xvar = "croppast"
+xvar = "croppast_frac_croppastfor"
 
 # Y variable
 yvar = "bin_as_frac_allforest"
@@ -131,6 +131,7 @@ importlib.reload(lem)
 
 # Setup
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
+sep_sites = vinfo["Nsites"] <= 5
 
 # # Portrait
 # nx = 2; figsizex = 11
@@ -152,26 +153,37 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     ef = edgefits[b]
     
     # Visualize
-    sitelist = [i[1] for i in ef.thisedge_df.index]
     plt.sca(fig.axes[b])
-    for s, site in enumerate(np.unique(sitelist)):
-        if site in sites_to_exclude:
-            continue
-        thisedgesite_df = ef.thisedge_df[ef.thisedge_df.index.get_level_values("site") == site]
-        thisedgesite_df.plot(
+    if sep_sites:
+        sitelist = [i[1] for i in ef.thisedge_df.index]
+        for s, site in enumerate(np.unique(sitelist)):
+            if site in sites_to_exclude:
+                continue
+            thisedgesite_df = ef.thisedge_df[ef.thisedge_df.index.get_level_values("site") == site]
+            
+            thisedgesite_df.plot(
+                ax=fig.axes[b],
+                x=xvar,
+                y=yvar,
+                color=sitecolors[s],
+                label = site,
+                kind="scatter",
+            )
+    else:
+        ef.thisedge_df.plot(
             ax=fig.axes[b],
             x=xvar,
             y=yvar,
-            color=sitecolors[s],
-            label = site,
+            alpha=0.005,
             kind="scatter",
-            )
+        )
     
     # Add best fit
     plt.plot(ef.fit_xdata, ef.predict(ef.fit_xdata), "-k")
     
     # Add chart info
-    plt.legend(title="Site")
+    if sep_sites:
+        plt.legend(title="Site")
     title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
     title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
     plt.title(title_bin + title_fit)
@@ -195,6 +207,8 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
 
 # Save
 outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix)
+if not sep_sites:
+    outpath = outpath.replace("pdf", "png")
 plt.savefig(outpath)
 
 plt.show()
