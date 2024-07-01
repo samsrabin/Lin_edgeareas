@@ -17,6 +17,8 @@ class EdgeFitType:
         
         # Join with areas of different land cover types
         self.thisedge_df = self.thisedge_df.join(totalareas)
+        if any(self.thisedge_df.isna().sum()):
+            raise RuntimeError("NaN(s) found after joining thisedge_df and totalareas")
         
         # Convert to fractional area
         self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
