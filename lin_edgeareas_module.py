@@ -267,7 +267,6 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
 def get_version_info(version):
     vinfo = {}
     if int(version) in [20240506, 20240605]:
-        vinfo["Nsites"] = 4
         vinfo["bins"] = [
             "<30",
             "30-60",
@@ -282,6 +281,14 @@ def get_version_info(version):
         vinfo["Nbins"] = len(vinfo["bins"])
     else:
         raise RuntimeError(f"Version {version} not recognized")
+
+    if int(version) == 20240506:
+        vinfo["Nsites"] = 4
+    elif int(version) == 20240605:
+        vinfo["Nsites"] = None
+    else:
+        raise RuntimeError(f"Version {version} not recognized")
+
     return vinfo
 
 def get_axis_labels(var):

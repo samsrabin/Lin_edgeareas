@@ -46,6 +46,9 @@ elif version == 20240605:
 else:
     raise RuntimeError(f"Version {version} not recognized")
 
+if vinfo["Nsites"] is None:
+    vinfo["Nsites"] = len(np.unique(edgeareas["site"]))
+
 # There should be no NaNs
 if any(edgeareas.isna().sum()):
     raise RuntimeError("NaN(s) found in edgeareas")
@@ -118,7 +121,6 @@ if sites_to_exclude:
     )
 
 # Save summary figure
-importlib.reload(lem)
 lem.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
 
 print("Done.")
