@@ -516,7 +516,16 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     for b, bin in enumerate(vinfo["bins"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
-    plt.legend(vinfo["bins"])
+    
+    # Get legend
+    legend = []
+    for i, ef in enumerate(edgefits):
+        item = vinfo["bins"][i]
+        item += f" (r2={np.round(ef.fit_result.rsquared, 3)})"
+        legend.append(item)
+    
+    # Add info
+    plt.legend(legend)
     plt.xlabel(get_axis_labels(xvar))
     plt.ylabel(get_axis_labels(yvar))
     plt.title("Raw (solid) and adjusted (dashed) predictions")
