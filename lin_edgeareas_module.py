@@ -87,7 +87,7 @@ class EdgeFitType:
                 cond_list.append(cond)
 
             # How many samples should we take from each X-axis bin?
-            N_choose = 100
+            N_choose = max([sum(x) for x in cond_list])
 
             # Take samples
             xdata = np.array([])
