@@ -118,8 +118,12 @@ class EdgeFitType:
                     cond_hi = xdata < hi
                 cond = cond_hi & (xdata >= lo)
                 N_found = np.sum(cond)
-                if N_found != N_choose:
-                    raise RuntimeError(f"Expected {N_choose} points in {lo}-{hi}; found {N_found}")
+                if not any(cond_list[b]):
+                    N_expected = 0
+                else:
+                    N_expected = N_choose
+                if N_found != N_expected:
+                    raise RuntimeError(f"Expected {N_expected} points in {lo}-{hi}; found {N_found}")
         else:
             xdata = self.fit_xdata
             ydata = self.fit_ydata_in
