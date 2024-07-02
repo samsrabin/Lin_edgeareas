@@ -175,11 +175,11 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
                 kind="scatter",
             )
     elif bootstrap:
-        plt.scatter(
-            ef.bs_xdata,
-            ef.bs_ydata,
-            alpha=alpha,
-        )
+        heatmap, xedges, yedges = np.histogram2d(ef.bs_xdata, ef.bs_ydata, bins=50)
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        plt.cla()
+        plt.imshow(heatmap.T, extent=extent, origin="lower", cmap="magma_r")
+
     else:
         ef.thisedge_df.plot(
             ax=fig.axes[b],
