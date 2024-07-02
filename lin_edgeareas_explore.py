@@ -135,7 +135,7 @@ importlib.reload(lem)
 
 # Setup
 sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
-sep_sites = vinfo["Nsites"] <= 5
+sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
 
 # # Portrait
 # nx = 2; figsizex = 11
