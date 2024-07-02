@@ -66,8 +66,11 @@ class EdgeFitType:
         # Bootstrap across bins of X-axis to ensure even weighting
         if bootstrap:
             N_xbins = 10
+            N_choose = 100
             x_max = max(self.fit_xdata)
             x_min = min(self.fit_xdata)
+            if x_max <= x_min:
+                raise RuntimeError("x_max must be > x_min")
             step = (x_max - x_min) / (N_xbins)
             bin_boundaries = np.arange(x_min, x_max+step, step)
             xdata = np.array([])
@@ -84,11 +87,28 @@ class EdgeFitType:
                     continue
                 bin_data = self.fit_xdata[np.where(cond)[0]]
                 rng = np.random.default_rng(seed=1987)
-                chosen = rng.choice(np.arange(np.sum(cond)), 100)
+                chosen = rng.choice(np.arange(np.sum(cond)), N_choose)
+                if len(chosen) != N_choose:
+                    raise RuntimeError(f"Expected {N_choose} samples; got {len(chosen)}")
                 xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
                 ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
             self.bs_xdata = xdata
             self.bs_ydata = ydata
+            
+            # Check
+            if any(np.isnan(xdata)) or any(np.isnan(ydata)):
+                raise RuntimeError("NaN after bootstrap sampling")
+            for b in range(N_xbins):
+                lo = bin_boundaries[b]
+                hi = bin_boundaries[b+1]
+                if b == N_xbins - 1:
+                    cond_hi = xdata <= hi
+                else:
+                    cond_hi = xdata < hi
+                cond = cond_hi & (xdata >= lo)
+                N_found = np.sum(cond)
+                if N_found != N_choose:
+                    raise RuntimeError(f"Expected {N_choose} points in {lo}-{hi}; found {N_found}")
         else:
             xdata = self.fit_xdata
             ydata = self.fit_ydata_in
