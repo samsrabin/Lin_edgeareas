@@ -159,6 +159,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     # Visualize
     plt.sca(fig.axes[b])
     alpha = min(1, 8.635 / vinfo["Nsites"])
+    alpha = max(alpha, 1/510)  # https://stackoverflow.com/questions/58788958/the-smallest-valid-alpha-value-in-matplotlib
     if sep_sites:
         sitelist = [i[1] for i in ef.thisedge_df.index]
         for s, site in enumerate(np.unique(sitelist)):
