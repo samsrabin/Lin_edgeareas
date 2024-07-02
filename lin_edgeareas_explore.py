@@ -101,7 +101,7 @@ yvar = "bin_as_frac_allforest"
 sites_to_exclude = []
 
 # Bootstrap resample to ensure even sampling across X-axis?
-bootstrap = False
+bootstrap = True
 
 edgefits = []
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
@@ -118,6 +118,10 @@ figfile_suffix = ".".join([
 if sites_to_exclude:
     figfile_suffix = figfile_suffix + "." + ",".join(
         [str(x)for x in sites_to_exclude]
+    )
+if bootstrap:
+    figfile_suffix = ".".join(
+        [figfile_suffix, "bs"]
     )
 
 # Save summary figure
@@ -154,6 +158,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
     # Visualize
     plt.sca(fig.axes[b])
+    alpha = min(1, 8.635 / vinfo["Nsites"])
     if sep_sites:
         sitelist = [i[1] for i in ef.thisedge_df.index]
         for s, site in enumerate(np.unique(sitelist)):
@@ -169,12 +174,18 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
                 label = site,
                 kind="scatter",
             )
+    elif bootstrap:
+        plt.scatter(
+            ef.bs_xdata,
+            ef.bs_ydata,
+            alpha=alpha,
+        )
     else:
         ef.thisedge_df.plot(
             ax=fig.axes[b],
             x=xvar,
             y=yvar,
-            alpha=0.005,
+            alpha=alpha,
             kind="scatter",
         )
     

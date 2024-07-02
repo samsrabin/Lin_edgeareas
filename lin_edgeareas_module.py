@@ -87,6 +87,8 @@ class EdgeFitType:
                 chosen = rng.choice(np.arange(np.sum(cond)), 100)
                 xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
                 ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
+            self.bs_xdata = xdata
+            self.bs_ydata = ydata
         else:
             xdata = self.fit_xdata
             ydata = self.fit_ydata_in
