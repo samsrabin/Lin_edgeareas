@@ -85,9 +85,10 @@ class EdgeFitType:
                 cond = cond_hi & (self.fit_xdata >= lo)
                 if not any(cond):
                     continue
-                bin_data = self.fit_xdata[np.where(cond)[0]]
+                where_cond = np.where(cond)[0]
+                bin_data = self.fit_xdata[where_cond]
                 rng = np.random.default_rng(seed=1987)
-                chosen = rng.choice(np.arange(np.sum(cond)), N_choose)
+                chosen = rng.choice(where_cond, N_choose)
                 if len(chosen) != N_choose:
                     raise RuntimeError(f"Expected {N_choose} samples; got {len(chosen)}")
                 xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
