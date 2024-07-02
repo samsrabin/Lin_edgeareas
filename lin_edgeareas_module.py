@@ -168,7 +168,8 @@ def add_missing_bins(edgeareas):
 
 def adjust_predicted_fits(ydata_yb):
     ydata_yb[ydata_yb < 0] = 0
-    ydata_yb = ydata_yb / np.sum(ydata_yb, axis=1, keepdims=True)
+    axis = len(ydata_yb.shape) - 1
+    ydata_yb = ydata_yb / np.sum(ydata_yb, axis=axis, keepdims=True)
     return ydata_yb
 
 
