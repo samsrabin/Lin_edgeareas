@@ -48,6 +48,9 @@ class EdgeFitType:
             output = prefix + "Not yet fit"
         else:
             output = prefix + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
+        
+        output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment)"
+        
         return output
 
     def ef_fit(self, xvar, yvar, bootstrap):
@@ -135,6 +138,12 @@ class EdgeFitType:
         
         # Get best fit
         self.fit_type, self.fit_result = fit(xdata, ydata)
+        self.fit_ydata_out = self.predict(xdata)
+
+        # Get RMSE
+        self.nrmse = np.sum((ydata - self.fit_ydata_out)**2)**0.5 / np.mean(ydata)
+        self.fit_ydata_out_adj = adjust_predicted_fits(self.fit_ydata_out)
+        self.nrmse_adj = (np.sum((ydata - self.fit_ydata_out_adj)**2))**0.5 / np.mean(ydata)
     
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
