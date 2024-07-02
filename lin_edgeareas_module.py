@@ -65,16 +65,17 @@ class EdgeFitType:
         
         # Bootstrap across bins of X-axis to ensure even weighting
         if bootstrap:
+            # Set up X-axis bins
             N_xbins = 10
-            N_choose = 100
             x_max = max(self.fit_xdata)
             x_min = min(self.fit_xdata)
             if x_max <= x_min:
                 raise RuntimeError("x_max must be > x_min")
             step = (x_max - x_min) / (N_xbins)
             bin_boundaries = np.arange(x_min, x_max+step, step)
-            xdata = np.array([])
-            ydata = np.array([])
+
+            # Which data points correspond to each X-axis bin?
+            cond_list = []
             for b in np.arange(N_xbins):
                 lo = bin_boundaries[b]
                 hi = bin_boundaries[b+1]
@@ -83,6 +84,15 @@ class EdgeFitType:
                 else:
                     cond_hi = self.fit_xdata < hi
                 cond = cond_hi & (self.fit_xdata >= lo)
+                cond_list.append(cond)
+
+            # How many samples should we take from each X-axis bin?
+            N_choose = 100
+
+            # Take samples
+            xdata = np.array([])
+            ydata = np.array([])
+            for cond in cond_list:
                 if not any(cond):
                     continue
                 where_cond = np.where(cond)[0]
