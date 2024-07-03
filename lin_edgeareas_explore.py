@@ -19,6 +19,8 @@ this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped
 # version = 20240506
 version = 20240605
 
+bin_edges_out = None
+
 # %% Setup
 
 version_str = str(version)
@@ -32,7 +34,7 @@ xdata_01 = np.arange(0, 1 + step_01, step_01)
 importlib.reload(lem)
 
 # Get version info
-vinfo = lem.get_version_info(version)
+vinfo = lem.get_version_info(version, bin_edges_out)
 
 # Import edge areas and land covers
 if version == 20240506:
@@ -139,17 +141,17 @@ sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
 
 # # Portrait
 # nx = 2; figsizex = 11
-# ny = int(np.ceil(vinfo["Nbins_in"]/2)); figsizey = 22
+# ny = int(np.ceil(vinfo["Nbins_out"]/2)); figsizey = 22
 
 # Landscape
 ny = 3; figsizey = 11
-nx = int(np.ceil(vinfo["Nbins_in"]/ny)); figsizex = 15
+nx = int(np.ceil(vinfo["Nbins_out"]/ny)); figsizex = 15
 
 fig, axs = plt.subplots(
     ny, nx,
     figsize=(figsizex, figsizey),
     )
-Nextra = ny*nx - vinfo["Nbins_in"]
+Nextra = ny*nx - vinfo["Nbins_out"]
 
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
@@ -196,7 +198,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     # Add chart info
     if sep_sites:
         plt.legend(title="Site")
-    title_bin = f"Bin {bin}: {vinfo['bins_in'][b]} m: "
+    title_bin = f"Bin {bin}: {vinfo['bins_out'][b]} m: "
     title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
     plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(xvar))
@@ -239,13 +241,13 @@ x = 0.5
 ydata = lem.predict_multiple_fits(np.array([x]), edgeareas, edgefits, restrict_x=False)
 
 print("Fraction of forest:")
-for b, bin in enumerate(vinfo["bins_in"]):
+for b, bin in enumerate(vinfo["bins_out"]):
     y = ydata[0][b]
     y = np.round(100*y, 1)
     print(f"{bin}:    \t{y}%")
 
 print("Fraction of gridcell (assuming just forest and $xaxis):")
-for b, bin in enumerate(vinfo["bins_in"]):
+for b, bin in enumerate(vinfo["bins_out"]):
     y = ydata[0][b]
     y *= (1 - x)
     y = np.round(100*y, 1)
@@ -254,7 +256,7 @@ for b, bin in enumerate(vinfo["bins_in"]):
 
 gridcell_ht = 5
 print("Patch height:")
-for b, bin in enumerate(vinfo["bins_in"]):
+for b, bin in enumerate(vinfo["bins_out"]):
     y = ydata[0][b]
     y *= (1 - x)*5
     y = np.round(y, 1)

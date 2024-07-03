@@ -30,7 +30,7 @@ class EdgeFitType:
         # Save other info
         self.bin_index = b
         self.bin_number = bin
-        self.bin_name = vinfo["bins_in"][b]
+        self.bin_name = vinfo["bins_out"][b]
         self.sites_to_exclude = sites_to_exclude
 
         # Initialize other members
@@ -326,7 +326,7 @@ def bin_edges_to_str(bin_edges):
     bins.append(f">{bin_edge}")
     return Nbins, bins
 
-def get_version_info(version):
+def get_version_info(version, bin_edges_out):
     vinfo = {}
     
     # Specify bin edges in input file. Do not include 0 or Inf.
@@ -335,7 +335,7 @@ def get_version_info(version):
     else:
         raise RuntimeError(f"Version {version} not recognized")
     
-    # Process bins
+    # Process input bins
     vinfo["Nbins_in"], vinfo["bins_in"] = bin_edges_to_str(vinfo["bin_edges_in"])
 
     if int(version) == 20240506:
@@ -344,6 +344,14 @@ def get_version_info(version):
         vinfo["Nsites"] = None
     else:
         raise RuntimeError(f"Version {version} not recognized")
+
+    # Process output bins
+    if bin_edges_out is None:
+        for key, value in vinfo.copy().items():
+            if "_in" in key:
+                vinfo[key.replace("_in", "_out")] = value
+    else:
+        raise RuntimeError("Handle non-None bin_edges_out")
 
     return vinfo
 
@@ -564,7 +572,7 @@ def read_20240605(this_dir, filename_csv):
     return site_info, siteyear_info, edgeareas, landcovers
 
 def get_color(vinfo, b):
-    color = colormaps["jet_r"](b/(vinfo["Nbins_in"]-1))
+    color = colormaps["jet_r"](b/(vinfo["Nbins_out"]-1))
     return color
 
 def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
@@ -573,17 +581,17 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     predict_multiple_fits(xdata_01, edgeareas, edgefits)
     )
 
-    for b, bin in enumerate(vinfo["bins_in"]):
+    for b, bin in enumerate(vinfo["bins_out"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_yb[:,b], color=color)
-    for b, bin in enumerate(vinfo["bins_in"]):
+    for b, bin in enumerate(vinfo["bins_out"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
     
     # Get legend
     legend = []
     for i, ef in enumerate(edgefits):
-        item = vinfo["bins_in"][i]
+        item = vinfo["bins_out"][i]
         item += f" (r2={np.round(ef.fit_result.rsquared, 3)})"
         legend.append(item)
     
