@@ -564,9 +564,9 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     predict_multiple_fits(xdata_01, edgeareas, edgefits)
     )
 
-    # for b, bin in enumerate(vinfo["bins"]):
-    #     color = get_color(vinfo, b)
-    #     plt.plot(xdata_01, ydata_yb[:,b], color=color)
+    for b, bin in enumerate(vinfo["bins"]):
+        color = get_color(vinfo, b)
+        plt.plot(xdata_01, ydata_yb[:,b], color=color)
     for b, bin in enumerate(vinfo["bins"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
