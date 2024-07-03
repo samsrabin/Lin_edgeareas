@@ -313,21 +313,26 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
 
 def get_version_info(version):
     vinfo = {}
+    
+    # Specify bin edges. Do not include 0 or Inf.
     if int(version) in [20240506, 20240605]:
-        vinfo["bins"] = [
-            "<30",
-            "30-60",
-            "60-90",
-            "90-120",
-            "120-300",
-            "300-500",
-            "500-1000",
-            "1000-2000",
-            ">2000"
-            ]
-        vinfo["Nbins"] = len(vinfo["bins"])
+        vinfo["bin_edges"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
     else:
         raise RuntimeError(f"Version {version} not recognized")
+    
+    # Check bin edges
+    if any([x <= 0 for x in vinfo["bin_edges"]]) or any(np.isinf(vinfo["bin_edges"])):
+        raise ValueError("Include only positive, finite bin edges. 0 and Inf are implied.")
+    
+    # Process bins into string
+    vinfo["Nbins"] = len(vinfo["bin_edges"]) + 1
+    vinfo["bins"] = []
+    for b, bin_edge in enumerate(vinfo["bin_edges"]):
+        if b == 0:
+            vinfo["bins"].append(f"<{bin_edge}")
+        else:
+            vinfo["bins"].append(f"{vinfo['bin_edges'][b-1]}-{bin_edge}")
+    vinfo["bins"].append(f">{bin_edge}")
 
     if int(version) == 20240506:
         vinfo["Nsites"] = 4
