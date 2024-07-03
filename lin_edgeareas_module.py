@@ -30,7 +30,7 @@ class EdgeFitType:
         # Save other info
         self.bin_index = b
         self.bin_number = bin
-        self.bin_name = vinfo["bins"][b]
+        self.bin_name = vinfo["bins_in"][b]
         self.sites_to_exclude = sites_to_exclude
 
         # Initialize other members
@@ -311,28 +311,32 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
         
     return outpath
 
+def bin_edges_to_str(bin_edges):
+    # Check
+    if any([x <= 0 for x in bin_edges]) or any(np.isinf(bin_edges)):
+        raise ValueError("Include only positive, finite bin edges. 0 and Inf are implied.")
+    
+    Nbins = len(bin_edges) + 1
+    bins = []
+    for b, bin_edge in enumerate(bin_edges):
+        if b == 0:
+            bins.append(f"<{bin_edge}")
+        else:
+            bins.append(f"{bin_edges[b-1]}-{bin_edge}")
+    bins.append(f">{bin_edge}")
+    return Nbins, bins
+
 def get_version_info(version):
     vinfo = {}
     
-    # Specify bin edges. Do not include 0 or Inf.
+    # Specify bin edges in input file. Do not include 0 or Inf.
     if int(version) in [20240506, 20240605]:
-        vinfo["bin_edges"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
+        vinfo["bin_edges_in"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
     else:
         raise RuntimeError(f"Version {version} not recognized")
     
-    # Check bin edges
-    if any([x <= 0 for x in vinfo["bin_edges"]]) or any(np.isinf(vinfo["bin_edges"])):
-        raise ValueError("Include only positive, finite bin edges. 0 and Inf are implied.")
-    
-    # Process bins into string
-    vinfo["Nbins"] = len(vinfo["bin_edges"]) + 1
-    vinfo["bins"] = []
-    for b, bin_edge in enumerate(vinfo["bin_edges"]):
-        if b == 0:
-            vinfo["bins"].append(f"<{bin_edge}")
-        else:
-            vinfo["bins"].append(f"{vinfo['bin_edges'][b-1]}-{bin_edge}")
-    vinfo["bins"].append(f">{bin_edge}")
+    # Process bins
+    vinfo["Nbins_in"], vinfo["bins_in"] = bin_edges_to_str(vinfo["bin_edges_in"])
 
     if int(version) == 20240506:
         vinfo["Nsites"] = 4
@@ -560,7 +564,7 @@ def read_20240605(this_dir, filename_csv):
     return site_info, siteyear_info, edgeareas, landcovers
 
 def get_color(vinfo, b):
-    color = colormaps["jet_r"](b/(vinfo["Nbins"]-1))
+    color = colormaps["jet_r"](b/(vinfo["Nbins_in"]-1))
     return color
 
 def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
@@ -569,17 +573,17 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     predict_multiple_fits(xdata_01, edgeareas, edgefits)
     )
 
-    for b, bin in enumerate(vinfo["bins"]):
+    for b, bin in enumerate(vinfo["bins_in"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_yb[:,b], color=color)
-    for b, bin in enumerate(vinfo["bins"]):
+    for b, bin in enumerate(vinfo["bins_in"]):
         color = get_color(vinfo, b)
         plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
     
     # Get legend
     legend = []
     for i, ef in enumerate(edgefits):
-        item = vinfo["bins"][i]
+        item = vinfo["bins_in"][i]
         item += f" (r2={np.round(ef.fit_result.rsquared, 3)})"
         legend.append(item)
     

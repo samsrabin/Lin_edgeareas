@@ -139,17 +139,17 @@ sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
 
 # # Portrait
 # nx = 2; figsizex = 11
-# ny = int(np.ceil(vinfo["Nbins"]/2)); figsizey = 22
+# ny = int(np.ceil(vinfo["Nbins_in"]/2)); figsizey = 22
 
 # Landscape
 ny = 3; figsizey = 11
-nx = int(np.ceil(vinfo["Nbins"]/ny)); figsizex = 15
+nx = int(np.ceil(vinfo["Nbins_in"]/ny)); figsizex = 15
 
 fig, axs = plt.subplots(
     ny, nx,
     figsize=(figsizex, figsizey),
     )
-Nextra = ny*nx - vinfo["Nbins"]
+Nextra = ny*nx - vinfo["Nbins_in"]
 
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
     
@@ -196,7 +196,7 @@ for b, bin in enumerate(pd.unique(edgeareas.edge)):
     # Add chart info
     if sep_sites:
         plt.legend(title="Site")
-    title_bin = f"Bin {bin}: {vinfo['bins'][b]} m: "
+    title_bin = f"Bin {bin}: {vinfo['bins_in'][b]} m: "
     title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
     plt.title(title_bin + title_fit)
     plt.xlabel(lem.get_axis_labels(xvar))
@@ -239,13 +239,13 @@ x = 0.5
 ydata = lem.predict_multiple_fits(np.array([x]), edgeareas, edgefits, restrict_x=False)
 
 print("Fraction of forest:")
-for b, bin in enumerate(vinfo["bins"]):
+for b, bin in enumerate(vinfo["bins_in"]):
     y = ydata[0][b]
     y = np.round(100*y, 1)
     print(f"{bin}:    \t{y}%")
 
 print("Fraction of gridcell (assuming just forest and $xaxis):")
-for b, bin in enumerate(vinfo["bins"]):
+for b, bin in enumerate(vinfo["bins_in"]):
     y = ydata[0][b]
     y *= (1 - x)
     y = np.round(100*y, 1)
@@ -254,7 +254,7 @@ for b, bin in enumerate(vinfo["bins"]):
 
 gridcell_ht = 5
 print("Patch height:")
-for b, bin in enumerate(vinfo["bins"]):
+for b, bin in enumerate(vinfo["bins_in"]):
     y = ydata[0][b]
     y *= (1 - x)*5
     y = np.round(y, 1)
