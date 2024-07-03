@@ -334,6 +334,9 @@ def get_version_info(version, bin_edges_out):
         vinfo["bin_edges_in"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
     else:
         raise RuntimeError(f"Version {version} not recognized")
+    vinfo["bin_edges_in"].sort()
+    if not np.array_equal(vinfo["bin_edges_in"], np.unique(vinfo["bin_edges_in"])):
+        raise RuntimeError("bin_edges_in must all be unique")
     
     # Process input bins
     vinfo["Nbins_in"], vinfo["bins_in"] = bin_edges_to_str(vinfo["bin_edges_in"])
@@ -347,13 +350,71 @@ def get_version_info(version, bin_edges_out):
 
     # Process output bins
     if bin_edges_out is None:
+        vinfo["bin_mapping"] = None
         for key, value in vinfo.copy().items():
             if "_in" in key:
                 vinfo[key.replace("_in", "_out")] = value
     else:
-        raise RuntimeError("Handle non-None bin_edges_out")
+        bin_edges_out.sort()
+        if not np.array_equal(bin_edges_out, np.unique(bin_edges_out)):
+            raise RuntimeError("bin_edges_out must all be unique")
+        if any(x not in vinfo["bin_edges_in"] for x in bin_edges_out):
+            raise ValueError("bin_edges_out value(s) missing from bin_edges_in")
+        vinfo["Nbins_out"], vinfo["bins_out"] = bin_edges_to_str(bin_edges_out)
+        vinfo["bin_edges_out"] = bin_edges_out
+        vinfo = map_bins_in2out(bin_edges_out, vinfo)
 
     return vinfo
+
+def map_bins_in2out(bin_edges_out, vinfo):
+    # The first input bin will always map to the first output bin
+    vinfo["bin_mapping"] = [1]
+    
+    # Map the interior bins
+    for bedge_in in vinfo["bin_edges_in"][1:]:
+        index = None
+        for b, bedge_out_lo in enumerate(bin_edges_out):
+            if bedge_out_lo == max(bin_edges_out):
+                bedge_out_hi = np.inf
+            else:
+                bedge_out_hi = bin_edges_out[b+1]
+            if bedge_in >= bedge_out_lo and bedge_in <= bedge_out_hi:
+                index = b+1
+                break
+        vinfo["bin_mapping"].append(index + 1)  # Because Lin started at 1
+        
+    # The highest input bin will always map to the highest output bin
+    vinfo["bin_mapping"].append(vinfo["Nbins_out"])
+
+    # Check mapping
+    for b, bin_str_in in enumerate(vinfo["bins_in"]):
+        m = vinfo["bin_mapping"][b] - 1
+        bin_str_out = vinfo["bins_out"][m]
+            
+        bin_in_lo, bin_in_hi = get_bin_lo_hi_from_str(bin_str_in)
+        bin_out_lo, bin_out_hi = get_bin_lo_hi_from_str(bin_str_out)
+            
+        err_msg = f" bound error with input bin {bin_str_in} mapped to output bin {bin_str_out}"
+        assert bin_in_lo >= bin_out_lo, "Lower" + err_msg
+        assert bin_in_hi <= bin_out_hi, "Upper" + err_msg
+    
+    return vinfo
+
+def get_bin_lo_hi_from_str(bin_str):
+    if "<" in bin_str:
+        lo = -np.inf
+        hi = float(bin_str.replace("<", ""))
+    elif ">" in bin_str:
+        lo = float(bin_str.replace(">", ""))
+        hi = np.inf
+    else:
+        try:
+            lo, hi = bin_str.split("-")
+        except:
+            raise RuntimeError(f"Error splitting {bin_str}: Expected one hyphen")
+        lo = float(lo)
+        hi = float(hi)
+    return lo, hi
 
 def get_axis_labels(var):
     if var == "forest_from_ea":
@@ -605,3 +666,24 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     plt.savefig(outpath)
 
     plt.show()
+
+def combine_bins(edgeareas, vinfo):
+    edge2 = np.full_like(edgeareas["sumarea"].values, np.nan)
+    for i, edge_out in enumerate(vinfo["bin_mapping"]):
+        edge_in = i + 1
+        edge2[np.where(edgeareas["edge"] == edge_in)] = edge_out
+    if any(np.isnan(edge2)):
+        raise RuntimeError("NaN(s) found in edge2")
+    edgeareas2 = edgeareas.copy()
+    edgeareas2["edge"] = edge2
+    tmp_indices = ["edge", "site", "Year"]
+    edgeareas2 = edgeareas2.groupby(tmp_indices).sum()
+    edgeareas2 = edgeareas2.reset_index(level=tmp_indices)
+    
+    # Check
+    tmp_indices = ["site", "Year"]
+    edgeareas_tmp = edgeareas.groupby(tmp_indices).sum()
+    edgeareas2_tmp = edgeareas2.groupby(tmp_indices).sum()
+    assert np.array_equal(edgeareas_tmp["sumarea"], edgeareas2_tmp["sumarea"]), "Error combining input to output bins"
+    
+    return edgeareas2

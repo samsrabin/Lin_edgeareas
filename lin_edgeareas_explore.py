@@ -20,6 +20,7 @@ this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped
 version = 20240605
 
 bin_edges_out = None
+# bin_edges_out = [30, 60, 120, 300]
 
 # %% Setup
 
@@ -56,6 +57,10 @@ if any(edgeareas.isna().sum()):
     raise RuntimeError("NaN(s) found in edgeareas")
 if any(landcovers.isna().sum()):
     raise RuntimeError("NaN(s) found in landcovers")
+
+# Combine bins, if needed
+if vinfo["bin_mapping"] is not None:
+    edgeareas = lem.combine_bins(edgeareas, vinfo)
 
 
 # %% Get derived information
@@ -124,6 +129,12 @@ if sites_to_exclude:
 if bootstrap:
     figfile_suffix = ".".join(
         [figfile_suffix, "bs"]
+    )
+if vinfo["bin_mapping"] is not None:
+    figfile_suffix = ".".join(
+        [figfile_suffix, "-".join(
+            [str(x) for x in vinfo["bin_edges_out"]]
+        )]
     )
 
 # Save summary figure
