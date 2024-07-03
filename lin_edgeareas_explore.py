@@ -101,7 +101,7 @@ yvar = "bin_as_frac_allforest"
 sites_to_exclude = []
 
 # Bootstrap resample to ensure even sampling across X-axis?
-bootstrap = True
+bootstrap = False
 
 edgefits = []
 for b, bin in enumerate(pd.unique(edgeareas.edge)):
