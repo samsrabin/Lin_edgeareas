@@ -565,15 +565,15 @@ def read_combine_multiple_csvs(filename_template, version):
 
 def read_20240605(this_dir, filename_csv, version):
     
-    first_edge_class = 51
+    first_edge_forest_lc = 51
     if version == 20240605:
-        last_edge_class = 59
-        first_edge_pasture = None
-        last_edge_pasture = None
+        last_edge_forest_lc = 59
+        first_edge_pasture_lc = None
+        last_edge_pasture_lc = None
     elif version == 20240709:
-        last_edge_class = 63
-        first_edge_pasture = 71
-        last_edge_pasture = 73
+        last_edge_forest_lc = 63
+        first_edge_pasture_lc = 71
+        last_edge_pasture_lc = 73
     else:
         raise RuntimeError(f"Version {version} not recognized")
     
@@ -617,12 +617,12 @@ def read_20240605(this_dir, filename_csv, version):
     fforest_num = landcovers_legend["landcover_num"][fforest_idx]
     
     # Which rows are edge classes?
-    is_edge_class = (df["landcover"] >= first_edge_class) & (df["landcover"] <= last_edge_class)
+    is_edge_class = (df["landcover"] >= first_edge_forest_lc) & (df["landcover"] <= last_edge_forest_lc)
     
     # Get DataFrame with just edge classes
     edgeareas = df[is_edge_class]
     edgeareas = edgeareas.rename(columns={"landcover": "edge"})
-    edgeareas.edge -= first_edge_class - 1  # Change to edge bin numbers starting with 1
+    edgeareas.edge -= first_edge_forest_lc - 1  # Change to edge bin numbers starting with 1
     
     # Get formação florestal area
     tmp_indices = ["site", "Year"]
@@ -637,12 +637,12 @@ def read_20240605(this_dir, filename_csv, version):
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
     
     # Combine edge pastures into non-edge pasture
-    if first_edge_pasture is not None:
-        if last_edge_pasture is None:
-            raise ValueError(f"first_edge_pasture is {first_edge_pasture} but last_edge_pasture is None")
+    if first_edge_pasture_lc is not None:
+        if last_edge_pasture_lc is None:
+            raise ValueError(f"first_edge_pasture is {first_edge_pasture_lc} but last_edge_pasture is None")
         lcnum = landcovers["landcover_num"]
         lcarea = landcovers["sumarea"]
-        is_edge_pasture = (lcnum >= first_edge_pasture) & (lcnum <= last_edge_pasture)
+        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (lcnum <= last_edge_pasture_lc)
         pasture_area_before = np.sum(lcarea[is_edge_pasture]) + np.sum(lcarea[lcnum==15])
         landcovers["landcover_num"][is_edge_pasture] = 15
         tmp_indices = ["site", "Year", "landcover_num"]
@@ -653,11 +653,11 @@ def read_20240605(this_dir, filename_csv, version):
         if pasture_area_after != pasture_area_before:
             raise RuntimeError(f"Pasture area mismatch after combining edge and deep pasture: {pasture_area_after - pasture_area_before}")
         lcnum = landcovers["landcover_num"]
-        is_edge_pasture = (lcnum >= first_edge_pasture) & (lcnum <= last_edge_pasture)
+        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (lcnum <= last_edge_pasture_lc)
         if any(is_edge_pasture):
             raise RuntimeError("Edge pasture remains after combining")
-    elif last_edge_pasture is not None:
-            raise ValueError(f"last_edge_pasture is {last_edge_pasture} but first_edge_pasture is None")
+    elif last_edge_pasture_lc is not None:
+            raise ValueError(f"last_edge_pasture is {last_edge_pasture_lc} but first_edge_pasture is None")
     
     # Check landcovers
     if any(landcovers.isna().sum()):
