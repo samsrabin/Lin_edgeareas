@@ -17,7 +17,8 @@ import os
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 # version = 20240506
-version = 20240605
+# version = 20240605
+version = 20240709
 
 bin_edges_out = None
 # bin_edges_out = [30, 60, 120, 300]
@@ -46,6 +47,9 @@ if version == 20240506:
 elif version == 20240605:
     filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam.csv")
     site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(this_dir, filename)
+elif version == 20240709:
+    filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam_v2.csv")
+    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240709(this_dir, filename)
 else:
     raise RuntimeError(f"Version {version} not recognized")
 

@@ -332,6 +332,8 @@ def get_version_info(version, bin_edges_out):
     # Specify bin edges in input file. Do not include 0 or Inf.
     if int(version) in [20240506, 20240605]:
         vinfo["bin_edges_in"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
+    elif int(version) in [20240709]:
+        vinfo["bin_edges_in"] = [30, 60, 90, 120, 150, 200, 300, 500, 750, 1000, 1500, 2000]
     else:
         raise RuntimeError(f"Version {version} not recognized")
     vinfo["bin_edges_in"].sort()
@@ -343,7 +345,7 @@ def get_version_info(version, bin_edges_out):
 
     if int(version) == 20240506:
         vinfo["Nsites"] = 4
-    elif int(version) == 20240605:
+    elif int(version) in [20240605, 20240709]:
         vinfo["Nsites"] = None
     else:
         raise RuntimeError(f"Version {version} not recognized")
@@ -622,6 +624,98 @@ def read_20240605(this_dir, filename_csv):
     landcovers = df[~is_edge_class]
     landcovers = pd.concat((landcovers, fforest)) # include formação florestal
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
+    landcovers = label_landcovers(landcovers_legend, landcovers)
+    if any(landcovers.isna().sum()):
+        raise RuntimeError("NaN(s) found in landcovers")
+    print(landcovers.head())
+    print(landcovers.tail())
+
+    return site_info, siteyear_info, edgeareas, landcovers
+
+def read_20240709(this_dir, filename_csv):
+    df = pd.read_csv(filename_csv)
+    df = df.rename(columns={
+        "totalareas": "sumarea",
+        "gridID": "site",
+        "year": "Year",
+        })
+    
+    # ecoregion should be unique per site
+    site_info = df[["site", "ecoregion"]]
+    groupvars = "site"
+    if any(site_info.groupby(groupvars)["ecoregion"].nunique() > 1):
+        print("ecoregion not unique per site. Skipping site_info.")
+        site_info = None
+    else:
+        site_info = site_info.groupby(groupvars).mean()
+        site_info = site_info.astype(int)
+    df = df.drop(columns="ecoregion")
+    
+    # forestcover should be unique per site-year
+    # 424 = 4.24%
+    siteyear_info = df[["site", "Year", "forestcover"]]
+    groupvars = ["site", "Year"]
+    if any(siteyear_info.groupby(groupvars)["forestcover"].nunique() > 1):
+        print("forestcover not unique per site-year. Skipping siteyear_info.")
+        siteyear_info = None
+    else:
+        siteyear_info = siteyear_info.groupby(groupvars).mean()
+        siteyear_info["forestcover"] *= 1e-4  # Convert to fraction
+        siteyear_info = siteyear_info.rename(columns={"forestcover": "forestcover_frac"})
+    df = df.drop(columns="forestcover")
+    
+    # Get MapBiomas type of formação florestal
+    landcovers_legend = read_landcovers_legend(this_dir)
+    fforest_idx = np.where(["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]])[0]
+    if len(fforest_idx) != 1:
+        raise RuntimeError(f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}")
+    fforest_idx = fforest_idx[0]
+    fforest_num = landcovers_legend["landcover_num"][fforest_idx]
+    
+    # Which rows are edge classes?
+    first_edge_class = 51
+    last_edge_class = 63
+    is_edge_class = (df["landcover"] >= first_edge_class) & (df["landcover"] <= last_edge_class)
+    
+    # Get DataFrame with just edge classes
+    edgeareas = df[is_edge_class]
+    edgeareas = edgeareas.rename(columns={"landcover": "edge"})
+    edgeareas.edge -= first_edge_class - 1  # Change to edge bin numbers 1-13
+    
+    # Get formação florestal area
+    tmp_indices = ["site", "Year"]
+    fforest = edgeareas.groupby(tmp_indices).sum()
+    fforest = fforest.reset_index(level=tmp_indices)
+    fforest = fforest.drop(columns="edge")
+    fforest = fforest.assign(landcover=fforest_num)
+    
+    # Get landcovers
+    landcovers = df[~is_edge_class]
+    landcovers = pd.concat((landcovers, fforest)) # include formação florestal
+    landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
+    print(landcovers.head())
+    
+    # Combine edge pastures (landcover 71-73) into non-edge pasture (15)
+    lcnum = landcovers["landcover_num"]
+    lcarea = landcovers["sumarea"]
+    is_edge_pasture = (lcnum >= 71) & (lcnum <= 73)
+    pasture_area_before = np.sum(lcarea[is_edge_pasture]) + np.sum(lcarea[lcnum==15])
+    landcovers["landcover_num"][is_edge_pasture] = 15
+    tmp_indices = ["site", "Year", "landcover_num"]
+    landcovers = landcovers.groupby(tmp_indices).sum()
+    landcovers = landcovers.reset_index(level=tmp_indices)
+    # Check
+    pasture_area_after = np.sum(lcarea[lcnum==15])
+    if pasture_area_after != pasture_area_before:
+        raise RuntimeError(f"Pasture area mismatch after combining edge and deep pasture: {pasture_area_after - pasture_area_before}")
+    lcnum = landcovers["landcover_num"]
+    is_edge_pasture = (lcnum >= 71) & (lcnum <= 73)
+    if any(is_edge_pasture):
+        raise RuntimeError("Edge pasture remains after combining")
+    
+    # Check landcovers
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
     landcovers = label_landcovers(landcovers_legend, landcovers)
