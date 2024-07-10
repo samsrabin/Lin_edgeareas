@@ -640,14 +640,24 @@ def read_20240605(this_dir, filename_csv, version):
     if first_edge_pasture_lc is not None:
         if last_edge_pasture_lc is None:
             raise ValueError(f"first_edge_pasture is {first_edge_pasture_lc} but last_edge_pasture is None")
+
+        # Get Mapbiomas pasture number
+        mapbiomas_pasture_str = "#3.1. Pastagem"
+        mapbiomas_pasture_lc = landcovers_legend["landcover_num"][landcovers_legend["landcover_str"]==mapbiomas_pasture_str].values
+        if len(mapbiomas_pasture_lc) != 1:
+            raise RuntimeError(f"Expected 1 landcover_str matching {mapbiomas_pasture_str}; found {len(mapbiomas_pasture_lc)}")
+        mapbiomas_pasture_lc = mapbiomas_pasture_lc[0]
+
+        # Combine
         lcnum = landcovers["landcover_num"]
         lcarea = landcovers["sumarea"]
         is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (lcnum <= last_edge_pasture_lc)
         pasture_area_before = np.sum(lcarea[is_edge_pasture]) + np.sum(lcarea[lcnum==15])
-        landcovers["landcover_num"][is_edge_pasture] = 15
+        landcovers["landcover_num"][is_edge_pasture] = mapbiomas_pasture_lc
         tmp_indices = ["site", "Year", "landcover_num"]
         landcovers = landcovers.groupby(tmp_indices).sum()
         landcovers = landcovers.reset_index(level=tmp_indices)
+
         # Check
         pasture_area_after = np.sum(lcarea[lcnum==15])
         if pasture_area_after != pasture_area_before:
