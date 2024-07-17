@@ -123,8 +123,8 @@ def plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xva
         title_bin = f"Bin {bin}: {vinfo['bins_out'][b]} m: "
         title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
         plt.title(title_bin + title_fit)
-        plt.xlabel(lem.get_axis_labels(xvar))
-        plt.ylabel(lem.get_axis_labels(yvar))
+        plt.xlabel(get_axis_labels(xvar))
+        plt.ylabel(get_axis_labels(yvar))
 
     # Get rid of unused axes
     for x in np.arange(nx):
