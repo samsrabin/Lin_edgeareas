@@ -11,8 +11,7 @@ import pandas as pd
 import numpy as np
 import importlib
 import lin_edgeareas_module as lem
-from matplotlib import pyplot as plt
-from matplotlib import colormaps
+import lin_edgeareas_figs as lef
 import os
 
 this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
@@ -98,6 +97,7 @@ if any(totalareas.isna().sum()):
 
 # %% Fit data
 importlib.reload(lem)
+importlib.reload(lef)
 
 # X variable
 # xvar = "forest_from_ea"
@@ -143,110 +143,16 @@ if vinfo["bin_mapping"] is not None:
     )
 
 # Save summary figure
-lem.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
+lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
 
 print("Done.")
 
 
 # %% Plot with subplots for each bin's scatter and fits
-importlib.reload(lem)
+importlib.reload(lef)
 
 # Setup
-sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
-sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
-
-# # Portrait
-# nx = 2; figsizex = 11
-# ny = int(np.ceil(vinfo["Nbins_out"]/2)); figsizey = 22
-
-# Landscape
-ny = 3; figsizey = 11
-nx = int(np.ceil(vinfo["Nbins_out"]/ny)); figsizex = 15
-
-fig, axs = plt.subplots(
-    ny, nx,
-    figsize=(figsizex, figsizey),
-    )
-Nextra = ny*nx - vinfo["Nbins_out"]
-
-for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    
-    # Get dataframe with just this edge, indexed by Year-site
-    ef = edgefits[b]
-    
-    # Visualize
-    plt.sca(fig.axes[b])
-    alpha = min(1, 8.635 / vinfo["Nsites"])
-    alpha = max(alpha, 1/510)  # https://stackoverflow.com/questions/58788958/the-smallest-valid-alpha-value-in-matplotlib
-    if sep_sites:
-        sitelist = [i[1] for i in ef.thisedge_df.index]
-        for s, site in enumerate(np.unique(sitelist)):
-            if site in sites_to_exclude:
-                continue
-            thisedgesite_df = ef.thisedge_df[ef.thisedge_df.index.get_level_values("site") == site]
-            
-            thisedgesite_df.plot(
-                ax=fig.axes[b],
-                x=xvar,
-                y=yvar,
-                color=sitecolors[s],
-                label = site,
-                kind="scatter",
-            )
-    elif bootstrap:
-        heatmap, xedges, yedges = np.histogram2d(ef.bs_xdata, ef.bs_ydata, bins=50)
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-        plt.cla()
-        plt.imshow(heatmap.T, extent=extent, origin="lower", cmap="magma_r")
-
-    else:
-        ef.thisedge_df.plot(
-            ax=fig.axes[b],
-            x=xvar,
-            y=yvar,
-            alpha=alpha,
-            kind="scatter",
-        )
-    
-    # Add best fit
-    plt.plot(ef.fit_xdata, ef.predict(ef.fit_xdata), "-k")
-    
-    # Add chart info
-    if sep_sites:
-        plt.legend(title="Site")
-    title_bin = f"Bin {bin}: {vinfo['bins_out'][b]} m: "
-    title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
-    plt.title(title_bin + title_fit)
-    plt.xlabel(lem.get_axis_labels(xvar))
-    plt.ylabel(lem.get_axis_labels(yvar))
-
-# Get rid of unused axes
-for x in np.arange(nx):
-    for y in np.arange(ny):
-        if not axs[y][x].has_data():
-            fig.delaxes(axs[y][x])
-
-fig.tight_layout()
-
-# Add lines with adjustments to sum to 1
-ydata_adj_yb = lem.adjust_predicted_fits(
-    lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
-    )
-for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
-
-# Save
-outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix)
-if not sep_sites:
-    outpath = outpath.replace("pdf", "png")
-plt.savefig(outpath)
-
-plt.show()
-
-
-# %% All fits and adjusted fits on one plot
-importlib.reload(lem)
-
+lef.plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
 
 
 # %% Query a single point

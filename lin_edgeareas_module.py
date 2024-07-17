@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import importlib
 import pandas as pd
 from lmfit import models, fit_report
-from matplotlib import colormaps
 
 class EdgeFitType:
     def __init__(self, edgeareas, totalareas, sites_to_exclude, b, bin, vinfo):
@@ -418,21 +417,6 @@ def get_bin_lo_hi_from_str(bin_str):
         hi = float(hi)
     return lo, hi
 
-def get_axis_labels(var):
-    if var == "forest_from_ea":
-        axis = "Forested fraction (sum all edge bins)"
-    elif var == "bin_as_frac_allforest":
-        axis = "Fraction of forest in this bin"
-    elif var == "fforest":
-        axis = "Forest-forest fraction"
-    elif var == "croppast":
-        axis = "Crop + pasture fraction"
-    elif var == "croppast_frac_croppastfor":
-        axis = "Crop + pasture area as fraction of crop+pasture+fforest"
-    else:
-        axis = var
-    return axis
-
 
 def read_landcovers_legend(this_dir):
     landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
@@ -680,40 +664,6 @@ def read_20240605(this_dir, filename_csv, version):
 
     return site_info, siteyear_info, edgeareas, landcovers
 
-def get_color(vinfo, b):
-    color = colormaps["jet_r"](b/(vinfo["Nbins_out"]-1))
-    return color
-
-def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
-    ydata_yb = predict_multiple_fits(xdata_01, edgeareas, edgefits, restrict_x=True)
-    ydata_adj_yb = adjust_predicted_fits(
-    predict_multiple_fits(xdata_01, edgeareas, edgefits)
-    )
-
-    for b, bin in enumerate(vinfo["bins_out"]):
-        color = get_color(vinfo, b)
-        plt.plot(xdata_01, ydata_yb[:,b], color=color)
-    for b, bin in enumerate(vinfo["bins_out"]):
-        color = get_color(vinfo, b)
-        plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
-    
-    # Get legend
-    legend = []
-    for i, ef in enumerate(edgefits):
-        item = vinfo["bins_out"][i]
-        item += f" (r2={np.round(ef.fit_result.rsquared, 3)})"
-        legend.append(item)
-    
-    # Add info
-    plt.legend(legend)
-    plt.xlabel(get_axis_labels(xvar))
-    plt.ylabel(get_axis_labels(yvar))
-    plt.title("Raw (solid) and adjusted (dashed) predictions")
-
-    outpath = get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot", figfile_suffix)
-    plt.savefig(outpath)
-
-    plt.show()
 
 def combine_bins(edgeareas, vinfo):
     edge2 = np.full_like(edgeareas["sumarea"].values, np.nan)
