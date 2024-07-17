@@ -7,25 +7,25 @@ from lmfit import models, fit_report
 
 class EdgeFitType:
     def __init__(self, edgeareas, totalareas, sites_to_exclude, b, bin, vinfo):
-        
+
         sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
-        
+
         # Get dataframe with just this edge, indexed by Year-site
         self.thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
         self.thisedge_df = self.thisedge_df[self.thisedge_df.index.isin(sites_to_include, level="site")]
         self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
-        
+
         # Join with areas of different land cover types
         self.thisedge_df = self.thisedge_df.join(totalareas)
         if any(self.thisedge_df.isna().sum()):
             raise RuntimeError("NaN(s) found after joining thisedge_df and totalareas")
-        
+
         # Convert to fractional area
         self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
-        
+
         # Get edge bin area as fraction of total forest
         self.thisedge_df = self.thisedge_df.assign(bin_as_frac_allforest=self.thisedge_df.bin / self.thisedge_df.forest_from_ea)
-        
+
         # Save other info
         self.bin_index = b
         self.bin_number = bin
@@ -40,23 +40,23 @@ class EdgeFitType:
         self.fit_bootstrapped = None
         self.fit_xvar = None
         self.fit_yvar = None
-    
+
     def __str__(self):
         prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
         if self.fit_result is None:
             output = prefix + "Not yet fit"
         else:
             output = prefix + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
-        
+
         output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment)"
-        
+
         return output
 
     def ef_fit(self, xvar, yvar, bootstrap):
         self.fit_xvar = xvar
         self.fit_yvar = yvar
         self.fit_bootstrapped = bootstrap
-        
+
         # Get X and Y data for fitting
         if xvar == "croppast_frac_croppastfor":
             self.thisedge_df = self.thisedge_df.assign(croppast_frac_croppastfor=self.thisedge_df.croppast / (self.thisedge_df.fforest + self.thisedge_df.croppast))
@@ -64,7 +64,7 @@ class EdgeFitType:
         else:
             self.fit_xdata = self.thisedge_df[xvar].values
         self.fit_ydata_in = self.thisedge_df[yvar].values
-        
+
         # Bootstrap across bins of X-axis to ensure even weighting
         if bootstrap:
             # Set up X-axis bins
@@ -107,7 +107,7 @@ class EdgeFitType:
                 ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
             self.bs_xdata = xdata
             self.bs_ydata = ydata
-            
+
             # Check
             if any(np.isnan(xdata)) or any(np.isnan(ydata)):
                 raise RuntimeError("NaN after bootstrap sampling")
@@ -129,12 +129,12 @@ class EdgeFitType:
         else:
             xdata = self.fit_xdata
             ydata = self.fit_ydata_in
-        
+
         # Sort X and Y data (helpful for plotting)
         isort = np.argsort(self.fit_xdata)
         self.fit_xdata = self.fit_xdata[isort]
         self.fit_ydata_in = self.fit_ydata_in[isort]
-        
+
         # Get best fit
         self.fit_type, self.fit_result = fit(xdata, ydata)
         self.fit_ydata_out = self.predict(xdata)
@@ -143,7 +143,7 @@ class EdgeFitType:
         self.nrmse = np.sum((ydata - self.fit_ydata_out)**2)**0.5 / np.mean(ydata)
         self.fit_ydata_out_adj = adjust_predicted_fits(self.fit_ydata_out)
         self.nrmse_adj = (np.sum((ydata - self.fit_ydata_out_adj)**2))**0.5 / np.mean(ydata)
-    
+
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
 
@@ -258,7 +258,7 @@ def _fit_quadratic(xdata, ydata):
     return result
 
 def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
-    
+
     # Try all fits
     results = {}
     results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)
@@ -268,7 +268,7 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
     results["quadratic"] = _fit_quadratic(xdata, ydata)
     results["gaussian"] = _fit_gaussian(xdata, ydata)
     results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
-    
+
     # Find best fit
     best_fit = None
     best_result = None
@@ -278,7 +278,7 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
             best_metric = result.aic
             best_fit = fit
             best_result = result
-    
+
     return best_fit, best_result
 
 def get_site_lc_area(lc, totalareas, landcovers):
@@ -307,14 +307,14 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
         version,
         outfile
     )
-        
+
     return outpath
 
 def bin_edges_to_str(bin_edges):
     # Check
     if any([x <= 0 for x in bin_edges]) or any(np.isinf(bin_edges)):
         raise ValueError("Include only positive, finite bin edges. 0 and Inf are implied.")
-    
+
     Nbins = len(bin_edges) + 1
     bins = []
     for b, bin_edge in enumerate(bin_edges):
@@ -327,7 +327,7 @@ def bin_edges_to_str(bin_edges):
 
 def get_version_info(version, bin_edges_out):
     vinfo = {}
-    
+
     # Specify bin edges in input file. Do not include 0 or Inf.
     if int(version) in [20240506, 20240605]:
         vinfo["bin_edges_in"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
@@ -338,7 +338,7 @@ def get_version_info(version, bin_edges_out):
     vinfo["bin_edges_in"].sort()
     if not np.array_equal(vinfo["bin_edges_in"], np.unique(vinfo["bin_edges_in"])):
         raise RuntimeError("bin_edges_in must all be unique")
-    
+
     # Process input bins
     vinfo["Nbins_in"], vinfo["bins_in"] = bin_edges_to_str(vinfo["bin_edges_in"])
 
@@ -370,7 +370,7 @@ def get_version_info(version, bin_edges_out):
 def map_bins_in2out(bin_edges_out, vinfo):
     # The first input bin will always map to the first output bin
     vinfo["bin_mapping"] = [1]
-    
+
     # Map the interior bins
     for bedge_in in vinfo["bin_edges_in"][1:]:
         index = None
@@ -383,7 +383,7 @@ def map_bins_in2out(bin_edges_out, vinfo):
                 index = b+1
                 break
         vinfo["bin_mapping"].append(index + 1)  # Because Lin started at 1
-        
+
     # The highest input bin will always map to the highest output bin
     vinfo["bin_mapping"].append(vinfo["Nbins_out"])
 
@@ -391,14 +391,14 @@ def map_bins_in2out(bin_edges_out, vinfo):
     for b, bin_str_in in enumerate(vinfo["bins_in"]):
         m = vinfo["bin_mapping"][b] - 1
         bin_str_out = vinfo["bins_out"][m]
-            
+
         bin_in_lo, bin_in_hi = get_bin_lo_hi_from_str(bin_str_in)
         bin_out_lo, bin_out_hi = get_bin_lo_hi_from_str(bin_str_out)
-            
+
         err_msg = f" bound error with input bin {bin_str_in} mapped to output bin {bin_str_out}"
         assert bin_in_lo >= bin_out_lo, "Lower" + err_msg
         assert bin_in_hi <= bin_out_hi, "Upper" + err_msg
-    
+
     return vinfo
 
 def get_bin_lo_hi_from_str(bin_str):
@@ -423,24 +423,24 @@ def read_landcovers_legend(this_dir):
     return landcovers_legend
 
 def import_landcovers_20240506(this_dir, version):
-    
+
     # Import legend
     landcovers_legend = read_landcovers_legend(this_dir)
-    
+
     # Import landcovers
     filename_template = os.path.join(this_dir, "inout", version, f"Landcover_clean_%d.csv")
     landcovers = read_combine_multiple_csvs(filename_template, version)
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
-    
+
     # Add labels
     landcovers = label_landcovers(landcovers_legend, landcovers)
-    
+
     return landcovers
 
 def label_landcovers(landcovers_legend, landcovers):
     landcovers = landcovers.assign(tmp = landcovers.landcover_num)
     landcovers = landcovers.set_index("tmp").join(landcovers_legend.set_index("landcover_num"))
-    
+
     # Handle any types in landcovers but not landcovers_legend
     unknown_str = "unknown"
     landcovers["landcover_str"] = landcovers["landcover_str"].fillna(unknown_str)
@@ -448,14 +448,14 @@ def label_landcovers(landcovers_legend, landcovers):
     # There should be no remaining NaNs
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
-    
+
     # Regenerate index
     index = np.arange(len(landcovers.index))
     landcovers = landcovers.set_index(index)
-    
+
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
-    
+
     # Add legend-based info
     is_water = np.full(landcovers.landcover_num.shape, False)
     is_forest = is_water.copy()
@@ -510,7 +510,7 @@ def label_landcovers(landcovers_legend, landcovers):
         is_unobs=is_unobs,
         is_unknown=is_unknown,
         )
-        
+
     return landcovers
 
 
@@ -522,7 +522,7 @@ def predict_multiple_fits(xdata, edgeareas, edgefits, restrict_x=False):
             ydata[xdata>max(edgefits[b].fit_xdata)] = np.nan
         if b==0:
             ydata_yb = np.expand_dims(ydata, axis=1)
-        else: 
+        else:
             ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
     return ydata_yb
 
@@ -531,16 +531,16 @@ def read_combine_multiple_csvs(filename_template, version):
     vinfo = get_version_info(version)
     df_combined = []
     for f in 1 + np.arange(vinfo["Nsites"]):
-        
+
         # Read site's .csv
         filename = filename_template % f
         if not os.path.exists(filename):
             raise FileNotFoundError(f"File not found: {filename}")
         df = pd.read_csv(filename)
-        
+
         # Add column for site
         df = df.assign(site=f)
-        
+
         # Append to edgeareas df
         df_combined.append(df)
 
@@ -548,7 +548,7 @@ def read_combine_multiple_csvs(filename_template, version):
     return df_combined
 
 def read_20240605(this_dir, filename_csv, version):
-    
+
     first_edge_forest_lc = 51
     if version == 20240605:
         last_edge_forest_lc = 59
@@ -560,14 +560,14 @@ def read_20240605(this_dir, filename_csv, version):
         last_edge_pasture_lc = 73
     else:
         raise RuntimeError(f"Version {version} not recognized")
-    
+
     df = pd.read_csv(filename_csv)
     df = df.rename(columns={
         "totalareas": "sumarea",
         "gridID": "site",
         "year": "Year",
         })
-    
+
     # ecoregion should be unique per site
     site_info = df[["site", "ecoregion"]]
     groupvars = "site"
@@ -578,7 +578,7 @@ def read_20240605(this_dir, filename_csv, version):
         site_info = site_info.groupby(groupvars).mean()
         site_info = site_info.astype(int)
     df = df.drop(columns="ecoregion")
-    
+
     # forestcover should be unique per site-year
     # 424 = 4.24%
     siteyear_info = df[["site", "Year", "forestcover"]]
@@ -591,7 +591,7 @@ def read_20240605(this_dir, filename_csv, version):
         siteyear_info["forestcover"] *= 1e-4  # Convert to fraction
         siteyear_info = siteyear_info.rename(columns={"forestcover": "forestcover_frac"})
     df = df.drop(columns="forestcover")
-    
+
     # Get MapBiomas type of formação florestal
     landcovers_legend = read_landcovers_legend(this_dir)
     fforest_idx = np.where(["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]])[0]
@@ -599,27 +599,27 @@ def read_20240605(this_dir, filename_csv, version):
         raise RuntimeError(f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}")
     fforest_idx = fforest_idx[0]
     fforest_num = landcovers_legend["landcover_num"][fforest_idx]
-    
+
     # Which rows are edge classes?
     is_edge_class = (df["landcover"] >= first_edge_forest_lc) & (df["landcover"] <= last_edge_forest_lc)
-    
+
     # Get DataFrame with just edge classes
     edgeareas = df[is_edge_class]
     edgeareas = edgeareas.rename(columns={"landcover": "edge"})
     edgeareas.edge -= first_edge_forest_lc - 1  # Change to edge bin numbers starting with 1
-    
+
     # Get formação florestal area
     tmp_indices = ["site", "Year"]
     fforest = edgeareas.groupby(tmp_indices).sum()
     fforest = fforest.reset_index(level=tmp_indices)
     fforest = fforest.drop(columns="edge")
     fforest = fforest.assign(landcover=fforest_num)
-    
+
     # Get landcovers
     landcovers = df[~is_edge_class]
     landcovers = pd.concat((landcovers, fforest)) # include formação florestal
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
-    
+
     # Combine edge pastures into non-edge pasture
     if first_edge_pasture_lc is not None:
         if last_edge_pasture_lc is None:
@@ -652,7 +652,7 @@ def read_20240605(this_dir, filename_csv, version):
             raise RuntimeError("Edge pasture remains after combining")
     elif last_edge_pasture_lc is not None:
             raise ValueError(f"last_edge_pasture is {last_edge_pasture_lc} but first_edge_pasture is None")
-    
+
     # Check landcovers
     if any(landcovers.isna().sum()):
         raise RuntimeError("NaN(s) found in landcovers")
@@ -677,11 +677,11 @@ def combine_bins(edgeareas, vinfo):
     tmp_indices = ["edge", "site", "Year"]
     edgeareas2 = edgeareas2.groupby(tmp_indices).sum()
     edgeareas2 = edgeareas2.reset_index(level=tmp_indices)
-    
+
     # Check
     tmp_indices = ["site", "Year"]
     edgeareas_tmp = edgeareas.groupby(tmp_indices).sum()
     edgeareas2_tmp = edgeareas2.groupby(tmp_indices).sum()
     assert np.array_equal(edgeareas_tmp["sumarea"], edgeareas2_tmp["sumarea"]), "Error combining input to output bins"
-    
+
     return edgeareas2

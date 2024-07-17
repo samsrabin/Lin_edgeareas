@@ -51,7 +51,7 @@ def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
                 [str(x) for x in vinfo["bin_edges_out"]]
             )]
         )
-        
+
     return figfile_suffix
 
 
@@ -67,14 +67,14 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, vinfo, edgeareas, xva
     for b, bin in enumerate(vinfo["bins_out"]):
         color = get_color(vinfo, b)
         plt.plot(XDATA_01, ydata_adj_yb[:,b], "--", color=color)
-    
+
     # Get legend
     legend = []
     for i, ef in enumerate(edgefits):
         item = vinfo["bins_out"][i]
         item += f" (r2={np.round(ef.fit_result.rsquared, 3)})"
         legend.append(item)
-    
+
     # Add info
     plt.legend(legend)
     plt.xlabel(get_axis_labels(xvar))
@@ -109,7 +109,7 @@ def plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, s
     for b, bin in enumerate(pd.unique(edgeareas.edge)):
         # Get dataframe with just this edge, indexed by Year-site
         ef = edgefits[b]
-    
+
         # Visualize
         plt.sca(fig.axes[b])
         alpha = min(1, 8.635 / vinfo["Nsites"])
@@ -120,7 +120,7 @@ def plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, s
                 if site in sites_to_exclude:
                     continue
                 thisedgesite_df = ef.thisedge_df[ef.thisedge_df.index.get_level_values("site") == site]
-            
+
                 thisedgesite_df.plot(
                 ax=fig.axes[b],
                 x=xvar,
@@ -143,10 +143,10 @@ def plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, s
             alpha=alpha,
             kind="scatter",
         )
-    
+
         # Add best fit
         plt.plot(ef.fit_xdata, ef.predict(ef.fit_xdata), "-k")
-    
+
         # Add chart info
         if sep_sites:
             plt.legend(title="Site")
