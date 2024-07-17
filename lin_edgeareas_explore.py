@@ -100,10 +100,12 @@ importlib.reload(lem)
 importlib.reload(lef)
 
 # X variable
-# xvar = "forest_from_ea"
-# xvar = "fforest"
-# xvar = "croppast"
-xvar = "croppast_frac_croppastfor"
+xvar_list = [
+    # "forest_from_ea",
+    # "fforest",
+    "croppast",
+    "croppast_frac_croppastfor",
+]
 
 # Y variable
 yvar = "bin_as_frac_allforest"
@@ -115,44 +117,40 @@ sites_to_exclude = []
 # Bootstrap resample to ensure even sampling across X-axis?
 bootstrap = False
 
-edgefits = []
-for b, bin in enumerate(pd.unique(edgeareas.edge)):
-    ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, bin, vinfo)
-    ef.ef_fit(xvar, yvar, bootstrap)
-    edgefits.append(ef)
-    print(ef)
+for xvar in xvar_list:
 
-# Get figure filename suffix
-figfile_suffix = ".".join([
-    xvar,
-    yvar,
-])
-if sites_to_exclude:
-    figfile_suffix = figfile_suffix + "." + ",".join(
-        [str(x)for x in sites_to_exclude]
-    )
-if bootstrap:
-    figfile_suffix = ".".join(
-        [figfile_suffix, "bs"]
-    )
-if vinfo["bin_mapping"] is not None:
-    figfile_suffix = ".".join(
-        [figfile_suffix, "-".join(
-            [str(x) for x in vinfo["bin_edges_out"]]
-        )]
-    )
+    edgefits = []
+    for b, bin in enumerate(pd.unique(edgeareas.edge)):
+        ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, bin, vinfo)
+        ef.ef_fit(xvar, yvar, bootstrap)
+        edgefits.append(ef)
+        print(ef)
 
-# Save summary figure
-lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
+    # Get figure filename suffix
+    figfile_suffix = ".".join([
+        xvar,
+        yvar,
+    ])
+    if sites_to_exclude:
+        figfile_suffix = figfile_suffix + "." + ",".join(
+            [str(x)for x in sites_to_exclude]
+        )
+    if bootstrap:
+        figfile_suffix = ".".join(
+            [figfile_suffix, "bs"]
+        )
+    if vinfo["bin_mapping"] is not None:
+        figfile_suffix = ".".join(
+            [figfile_suffix, "-".join(
+                [str(x) for x in vinfo["bin_edges_out"]]
+            )]
+        )
 
-print("Done.")
+    # Save summary figure
+    lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
 
-
-# %% Plot with subplots for each bin's scatter and fits
-importlib.reload(lef)
-
-# Setup
-lef.plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
+    # Save plot with subplots for each bin's scatter and fits
+    lef.plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
 
 
 # %% Query a single point
