@@ -5,14 +5,23 @@ import importlib
 import pandas as pd
 from lmfit import models, fit_report
 
+
 class EdgeFitType:
     def __init__(self, edgeareas, totalareas, sites_to_exclude, b, bin, vinfo):
 
-        sites_to_include = [x for x in np.unique(edgeareas.site) if x not in sites_to_exclude]
+        sites_to_include = [
+            x for x in np.unique(edgeareas.site) if x not in sites_to_exclude
+        ]
 
         # Get dataframe with just this edge, indexed by Year-site
-        self.thisedge_df = edgeareas[edgeareas.edge==bin].drop(columns="edge").set_index(["Year", "site"], verify_integrity=True)
-        self.thisedge_df = self.thisedge_df[self.thisedge_df.index.isin(sites_to_include, level="site")]
+        self.thisedge_df = (
+            edgeareas[edgeareas.edge == bin]
+            .drop(columns="edge")
+            .set_index(["Year", "site"], verify_integrity=True)
+        )
+        self.thisedge_df = self.thisedge_df[
+            self.thisedge_df.index.isin(sites_to_include, level="site")
+        ]
         self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
 
         # Join with areas of different land cover types
@@ -24,7 +33,9 @@ class EdgeFitType:
         self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
 
         # Get edge bin area as fraction of total forest
-        self.thisedge_df = self.thisedge_df.assign(bin_as_frac_allforest=self.thisedge_df.bin / self.thisedge_df.forest_from_ea)
+        self.thisedge_df = self.thisedge_df.assign(
+            bin_as_frac_allforest=self.thisedge_df.bin / self.thisedge_df.forest_from_ea
+        )
 
         # Save other info
         self.bin_index = b
@@ -46,7 +57,10 @@ class EdgeFitType:
         if self.fit_result is None:
             output = prefix + "Not yet fit"
         else:
-            output = prefix + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
+            output = (
+                prefix
+                + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
+            )
 
         output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment)"
 
@@ -59,7 +73,10 @@ class EdgeFitType:
 
         # Get X and Y data for fitting
         if xvar == "croppast_frac_croppastfor":
-            self.thisedge_df = self.thisedge_df.assign(croppast_frac_croppastfor=self.thisedge_df.croppast / (self.thisedge_df.fforest + self.thisedge_df.croppast))
+            self.thisedge_df = self.thisedge_df.assign(
+                croppast_frac_croppastfor=self.thisedge_df.croppast
+                / (self.thisedge_df.fforest + self.thisedge_df.croppast)
+            )
             self.fit_xdata = self.thisedge_df.croppast_frac_croppastfor.values
         else:
             self.fit_xdata = self.thisedge_df[xvar].values
@@ -74,13 +91,13 @@ class EdgeFitType:
             if x_max <= x_min:
                 raise RuntimeError("x_max must be > x_min")
             step = (x_max - x_min) / (N_xbins)
-            bin_boundaries = np.arange(x_min, x_max+step, step)
+            bin_boundaries = np.arange(x_min, x_max + step, step)
 
             # Which data points correspond to each X-axis bin?
             cond_list = []
             for b in np.arange(N_xbins):
                 lo = bin_boundaries[b]
-                hi = bin_boundaries[b+1]
+                hi = bin_boundaries[b + 1]
                 if b == N_xbins - 1:
                     cond_hi = self.fit_xdata <= hi
                 else:
@@ -102,7 +119,9 @@ class EdgeFitType:
                 rng = np.random.default_rng(seed=1987)
                 chosen = rng.choice(where_cond, N_choose)
                 if len(chosen) != N_choose:
-                    raise RuntimeError(f"Expected {N_choose} samples; got {len(chosen)}")
+                    raise RuntimeError(
+                        f"Expected {N_choose} samples; got {len(chosen)}"
+                    )
                 xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
                 ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
             self.bs_xdata = xdata
@@ -113,7 +132,7 @@ class EdgeFitType:
                 raise RuntimeError("NaN after bootstrap sampling")
             for b in range(N_xbins):
                 lo = bin_boundaries[b]
-                hi = bin_boundaries[b+1]
+                hi = bin_boundaries[b + 1]
                 if b == N_xbins - 1:
                     cond_hi = xdata <= hi
                 else:
@@ -125,7 +144,9 @@ class EdgeFitType:
                 else:
                     N_expected = N_choose
                 if N_found != N_expected:
-                    raise RuntimeError(f"Expected {N_expected} points in {lo}-{hi}; found {N_found}")
+                    raise RuntimeError(
+                        f"Expected {N_expected} points in {lo}-{hi}; found {N_found}"
+                    )
         else:
             xdata = self.fit_xdata
             ydata = self.fit_ydata_in
@@ -140,9 +161,11 @@ class EdgeFitType:
         self.fit_ydata_out = self.predict(xdata)
 
         # Get RMSE
-        self.nrmse = np.sum((ydata - self.fit_ydata_out)**2)**0.5 / np.mean(ydata)
+        self.nrmse = np.sum((ydata - self.fit_ydata_out) ** 2) ** 0.5 / np.mean(ydata)
         self.fit_ydata_out_adj = adjust_predicted_fits(self.fit_ydata_out)
-        self.nrmse_adj = (np.sum((ydata - self.fit_ydata_out_adj)**2))**0.5 / np.mean(ydata)
+        self.nrmse_adj = (
+            np.sum((ydata - self.fit_ydata_out_adj) ** 2)
+        ) ** 0.5 / np.mean(ydata)
 
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
@@ -158,10 +181,10 @@ def add_missing_bins(edgeareas):
         df = edgeareas[edgeareas["site"] == site]
         for index in index_list:
             if index == "edge":
-            # All site-years SHOULD have every edge, but don't necessarily
+                # All site-years SHOULD have every edge, but don't necessarily
                 cats = edgeareas["edge"].unique()
             else:
-            # Only include years where this site has observations
+                # Only include years where this site has observations
                 cats = df[index].unique()
             with pd.option_context("mode.chained_assignment", None):
                 df[index] = pd.Categorical(df[index], categories=cats)
@@ -181,21 +204,25 @@ def adjust_predicted_fits(ydata_yb):
     return ydata_yb
 
 
-class LognormalFitParams():
+class LognormalFitParams:
     def __init__(self, center=3.5, sigma=1, amplitude=6):
         self.center = center
         self.sigma = sigma
         self.amplitude = amplitude
 
+
 def _fit_lognormal(xdata, ydata, params):
     model = models.LognormalModel()
-    params = model.make_params(center=params.center, sigma=params.sigma, amplitude=params.amplitude)
+    params = model.make_params(
+        center=params.center, sigma=params.sigma, amplitude=params.amplitude
+    )
     result = model.fit(ydata, params, x=xdata)
 
     # print("Lognormal:")
     # print(fit_report(result))
     # print(" ")
     return result
+
 
 def _fit_exponential(xdata, ydata):
     model = models.ExponentialModel()
@@ -207,6 +234,7 @@ def _fit_exponential(xdata, ydata):
     # print(" ")
     return result
 
+
 def _fit_gaussian(xdata, ydata):
     model = models.GaussianModel()
     params = model.guess(ydata, x=xdata, seed=1987)
@@ -216,6 +244,7 @@ def _fit_gaussian(xdata, ydata):
     # print(fit_report(result))
     # print(" ")
     return result
+
 
 def _fit_skewgaussian(xdata, ydata):
     model = models.SkewedGaussianModel()
@@ -227,6 +256,7 @@ def _fit_skewgaussian(xdata, ydata):
     # print(" ")
     return result
 
+
 def _fit_logistic(xdata, ydata):
     model = models.StepModel(form="logistic")
     params = model.guess(ydata, x=xdata, seed=1987)
@@ -236,6 +266,7 @@ def _fit_logistic(xdata, ydata):
     # print(fit_report(result))
     # print(" ")
     return result
+
 
 def _fit_linear(xdata, ydata):
     model = models.LinearModel()
@@ -247,6 +278,7 @@ def _fit_linear(xdata, ydata):
     # print(" ")
     return result
 
+
 def _fit_quadratic(xdata, ydata):
     model = models.QuadraticModel()
     params = model.guess(ydata, x=xdata, seed=1987)
@@ -256,6 +288,7 @@ def _fit_quadratic(xdata, ydata):
     # print(fit_report(result))
     # print(" ")
     return result
+
 
 def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
 
@@ -281,6 +314,7 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
 
     return best_fit, best_result
 
+
 def get_site_lc_area(lc, totalareas, landcovers):
     lc_area = landcovers[landcovers["is_" + lc]].groupby(["Year", "site"]).sum()
     lc_area = lc_area.rename(columns={"sumarea": lc})
@@ -301,19 +335,17 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
         outfile += ".bs"
     outfile += "." + figfile_suffix
     outfile += ".pdf"
-    outpath = os.path.join(
-        this_dir,
-        "inout",
-        version,
-        outfile
-    )
+    outpath = os.path.join(this_dir, "inout", version, outfile)
 
     return outpath
+
 
 def bin_edges_to_str(bin_edges):
     # Check
     if any([x <= 0 for x in bin_edges]) or any(np.isinf(bin_edges)):
-        raise ValueError("Include only positive, finite bin edges. 0 and Inf are implied.")
+        raise ValueError(
+            "Include only positive, finite bin edges. 0 and Inf are implied."
+        )
 
     Nbins = len(bin_edges) + 1
     bins = []
@@ -325,6 +357,7 @@ def bin_edges_to_str(bin_edges):
     bins.append(f">{bin_edge}")
     return Nbins, bins
 
+
 def get_version_info(version, bin_edges_out):
     vinfo = {}
 
@@ -332,7 +365,20 @@ def get_version_info(version, bin_edges_out):
     if int(version) in [20240506, 20240605]:
         vinfo["bin_edges_in"] = [30, 60, 90, 120, 300, 500, 1000, 2000]
     elif int(version) in [20240709]:
-        vinfo["bin_edges_in"] = [30, 60, 90, 120, 150, 200, 300, 500, 750, 1000, 1500, 2000]
+        vinfo["bin_edges_in"] = [
+            30,
+            60,
+            90,
+            120,
+            150,
+            200,
+            300,
+            500,
+            750,
+            1000,
+            1500,
+            2000,
+        ]
     else:
         raise RuntimeError(f"Version {version} not recognized")
     vinfo["bin_edges_in"].sort()
@@ -367,6 +413,7 @@ def get_version_info(version, bin_edges_out):
 
     return vinfo
 
+
 def map_bins_in2out(bin_edges_out, vinfo):
     # The first input bin will always map to the first output bin
     vinfo["bin_mapping"] = [1]
@@ -378,9 +425,9 @@ def map_bins_in2out(bin_edges_out, vinfo):
             if bedge_out_lo == max(bin_edges_out):
                 bedge_out_hi = np.inf
             else:
-                bedge_out_hi = bin_edges_out[b+1]
+                bedge_out_hi = bin_edges_out[b + 1]
             if bedge_in >= bedge_out_lo and bedge_in <= bedge_out_hi:
-                index = b+1
+                index = b + 1
                 break
         vinfo["bin_mapping"].append(index + 1)  # Because Lin started at 1
 
@@ -401,6 +448,7 @@ def map_bins_in2out(bin_edges_out, vinfo):
 
     return vinfo
 
+
 def get_bin_lo_hi_from_str(bin_str):
     if "<" in bin_str:
         lo = -np.inf
@@ -419,8 +467,11 @@ def get_bin_lo_hi_from_str(bin_str):
 
 
 def read_landcovers_legend(this_dir):
-    landcovers_legend = pd.read_csv(os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv"))
+    landcovers_legend = pd.read_csv(
+        os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv")
+    )
     return landcovers_legend
+
 
 def import_landcovers_20240506(this_dir, version):
 
@@ -428,7 +479,9 @@ def import_landcovers_20240506(this_dir, version):
     landcovers_legend = read_landcovers_legend(this_dir)
 
     # Import landcovers
-    filename_template = os.path.join(this_dir, "inout", version, f"Landcover_clean_%d.csv")
+    filename_template = os.path.join(
+        this_dir, "inout", version, f"Landcover_clean_%d.csv"
+    )
     landcovers = read_combine_multiple_csvs(filename_template, version)
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
 
@@ -437,9 +490,12 @@ def import_landcovers_20240506(this_dir, version):
 
     return landcovers
 
+
 def label_landcovers(landcovers_legend, landcovers):
-    landcovers = landcovers.assign(tmp = landcovers.landcover_num)
-    landcovers = landcovers.set_index("tmp").join(landcovers_legend.set_index("landcover_num"))
+    landcovers = landcovers.assign(tmp=landcovers.landcover_num)
+    landcovers = landcovers.set_index("tmp").join(
+        landcovers_legend.set_index("landcover_num")
+    )
 
     # Handle any types in landcovers but not landcovers_legend
     unknown_str = "unknown"
@@ -509,7 +565,7 @@ def label_landcovers(landcovers_legend, landcovers):
         is_vegd=is_vegd,
         is_unobs=is_unobs,
         is_unknown=is_unknown,
-        )
+    )
 
     return landcovers
 
@@ -518,9 +574,9 @@ def predict_multiple_fits(xdata, edgeareas, edgefits, restrict_x=False):
     for b, bin in enumerate(pd.unique(edgeareas.edge)):
         ydata = edgefits[b].predict(xdata)
         if restrict_x:
-            ydata[xdata<min(edgefits[b].fit_xdata)] = np.nan
-            ydata[xdata>max(edgefits[b].fit_xdata)] = np.nan
-        if b==0:
+            ydata[xdata < min(edgefits[b].fit_xdata)] = np.nan
+            ydata[xdata > max(edgefits[b].fit_xdata)] = np.nan
+        if b == 0:
             ydata_yb = np.expand_dims(ydata, axis=1)
         else:
             ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
@@ -547,6 +603,7 @@ def read_combine_multiple_csvs(filename_template, version):
     df_combined = pd.concat(df_combined)
     return df_combined
 
+
 def read_20240605(this_dir, filename_csv, version):
 
     first_edge_forest_lc = 51
@@ -562,11 +619,13 @@ def read_20240605(this_dir, filename_csv, version):
         raise RuntimeError(f"Version {version} not recognized")
 
     df = pd.read_csv(filename_csv)
-    df = df.rename(columns={
-        "totalareas": "sumarea",
-        "gridID": "site",
-        "year": "Year",
-        })
+    df = df.rename(
+        columns={
+            "totalareas": "sumarea",
+            "gridID": "site",
+            "year": "Year",
+        }
+    )
 
     # ecoregion should be unique per site
     site_info = df[["site", "ecoregion"]]
@@ -589,24 +648,34 @@ def read_20240605(this_dir, filename_csv, version):
     else:
         siteyear_info = siteyear_info.groupby(groupvars).mean()
         siteyear_info["forestcover"] *= 1e-4  # Convert to fraction
-        siteyear_info = siteyear_info.rename(columns={"forestcover": "forestcover_frac"})
+        siteyear_info = siteyear_info.rename(
+            columns={"forestcover": "forestcover_frac"}
+        )
     df = df.drop(columns="forestcover")
 
     # Get MapBiomas type of formação florestal
     landcovers_legend = read_landcovers_legend(this_dir)
-    fforest_idx = np.where(["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]])[0]
+    fforest_idx = np.where(
+        ["formação florestal" in x.lower() for x in landcovers_legend["landcover_str"]]
+    )[0]
     if len(fforest_idx) != 1:
-        raise RuntimeError(f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}")
+        raise RuntimeError(
+            f"Expected 1 formação florestal row in landcovers legend; found {len(fforest_idx)}"
+        )
     fforest_idx = fforest_idx[0]
     fforest_num = landcovers_legend["landcover_num"][fforest_idx]
 
     # Which rows are edge classes?
-    is_edge_class = (df["landcover"] >= first_edge_forest_lc) & (df["landcover"] <= last_edge_forest_lc)
+    is_edge_class = (df["landcover"] >= first_edge_forest_lc) & (
+        df["landcover"] <= last_edge_forest_lc
+    )
 
     # Get DataFrame with just edge classes
     edgeareas = df[is_edge_class]
     edgeareas = edgeareas.rename(columns={"landcover": "edge"})
-    edgeareas.edge -= first_edge_forest_lc - 1  # Change to edge bin numbers starting with 1
+    edgeareas.edge -= (
+        first_edge_forest_lc - 1
+    )  # Change to edge bin numbers starting with 1
 
     # Get formação florestal area
     tmp_indices = ["site", "Year"]
@@ -617,41 +686,57 @@ def read_20240605(this_dir, filename_csv, version):
 
     # Get landcovers
     landcovers = df[~is_edge_class]
-    landcovers = pd.concat((landcovers, fforest)) # include formação florestal
+    landcovers = pd.concat((landcovers, fforest))  # include formação florestal
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
 
     # Combine edge pastures into non-edge pasture
     if first_edge_pasture_lc is not None:
         if last_edge_pasture_lc is None:
-            raise ValueError(f"first_edge_pasture is {first_edge_pasture_lc} but last_edge_pasture is None")
+            raise ValueError(
+                f"first_edge_pasture is {first_edge_pasture_lc} but last_edge_pasture is None"
+            )
 
         # Get Mapbiomas pasture number
         mapbiomas_pasture_str = "#3.1. Pastagem"
-        mapbiomas_pasture_lc = landcovers_legend["landcover_num"][landcovers_legend["landcover_str"]==mapbiomas_pasture_str].values
+        mapbiomas_pasture_lc = landcovers_legend["landcover_num"][
+            landcovers_legend["landcover_str"] == mapbiomas_pasture_str
+        ].values
         if len(mapbiomas_pasture_lc) != 1:
-            raise RuntimeError(f"Expected 1 landcover_str matching {mapbiomas_pasture_str}; found {len(mapbiomas_pasture_lc)}")
+            raise RuntimeError(
+                f"Expected 1 landcover_str matching {mapbiomas_pasture_str}; found {len(mapbiomas_pasture_lc)}"
+            )
         mapbiomas_pasture_lc = mapbiomas_pasture_lc[0]
 
         # Combine
         lcnum = landcovers["landcover_num"]
         lcarea = landcovers["sumarea"]
-        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (lcnum <= last_edge_pasture_lc)
-        pasture_area_before = np.sum(lcarea[is_edge_pasture]) + np.sum(lcarea[lcnum==15])
+        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (
+            lcnum <= last_edge_pasture_lc
+        )
+        pasture_area_before = np.sum(lcarea[is_edge_pasture]) + np.sum(
+            lcarea[lcnum == 15]
+        )
         landcovers["landcover_num"][is_edge_pasture] = mapbiomas_pasture_lc
         tmp_indices = ["site", "Year", "landcover_num"]
         landcovers = landcovers.groupby(tmp_indices).sum()
         landcovers = landcovers.reset_index(level=tmp_indices)
 
         # Check
-        pasture_area_after = np.sum(lcarea[lcnum==15])
+        pasture_area_after = np.sum(lcarea[lcnum == 15])
         if pasture_area_after != pasture_area_before:
-            raise RuntimeError(f"Pasture area mismatch after combining edge and deep pasture: {pasture_area_after - pasture_area_before}")
+            raise RuntimeError(
+                f"Pasture area mismatch after combining edge and deep pasture: {pasture_area_after - pasture_area_before}"
+            )
         lcnum = landcovers["landcover_num"]
-        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (lcnum <= last_edge_pasture_lc)
+        is_edge_pasture = (lcnum >= first_edge_pasture_lc) & (
+            lcnum <= last_edge_pasture_lc
+        )
         if any(is_edge_pasture):
             raise RuntimeError("Edge pasture remains after combining")
     elif last_edge_pasture_lc is not None:
-            raise ValueError(f"last_edge_pasture is {last_edge_pasture_lc} but first_edge_pasture is None")
+        raise ValueError(
+            f"last_edge_pasture is {last_edge_pasture_lc} but first_edge_pasture is None"
+        )
 
     # Check landcovers
     if any(landcovers.isna().sum()):
@@ -682,6 +767,8 @@ def combine_bins(edgeareas, vinfo):
     tmp_indices = ["site", "Year"]
     edgeareas_tmp = edgeareas.groupby(tmp_indices).sum()
     edgeareas2_tmp = edgeareas2.groupby(tmp_indices).sum()
-    assert np.array_equal(edgeareas_tmp["sumarea"], edgeareas2_tmp["sumarea"]), "Error combining input to output bins"
+    assert np.array_equal(
+        edgeareas_tmp["sumarea"], edgeareas2_tmp["sumarea"]
+    ), "Error combining input to output bins"
 
     return edgeareas2

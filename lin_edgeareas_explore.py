@@ -36,16 +36,24 @@ vinfo = lem.get_version_info(version, bin_edges_out)
 
 # Import edge areas and land covers
 if version == 20240506:
-    filename_template = os.path.join(this_dir, "inout", version_str, f"Edgearea_clean_%d.csv")
+    filename_template = os.path.join(
+        this_dir, "inout", version_str, f"Edgearea_clean_%d.csv"
+    )
     edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
     edgeareas = lem.add_missing_bins(edgeareas)
     landcovers = lem.import_landcovers_20240506(this_dir, version_str)
 elif version == 20240605:
     filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam.csv")
-    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(this_dir, filename, version)
+    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(
+        this_dir, filename, version
+    )
 elif version == 20240709:
-    filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam_v2.csv")
-    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(this_dir, filename, version)
+    filename = os.path.join(
+        this_dir, "inout", version_str, "Edge_landcover_forSam_v2.csv"
+    )
+    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(
+        this_dir, filename, version
+    )
 else:
     raise RuntimeError(f"Version {version} not recognized")
 
@@ -87,7 +95,7 @@ if any(totalareas.isna().sum()):
         years_missing = np.array([x[0] for x in yearsites_missing.index])
         sites_missing = np.array([x[1] for x in yearsites_missing.index])
         for y in np.unique(years_missing):
-            sites_missing_thisyear = sites_missing[years_missing==y]
+            sites_missing_thisyear = sites_missing[years_missing == y]
             print(f"   Year {y}: {sites_missing_thisyear}")
     raise RuntimeError("NaN(s) found in totalareas")
 
@@ -124,13 +132,28 @@ for xvar in xvar_list:
         print(ef)
 
     # Get figure filename suffix
-    figfile_suffix = lef.get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar)
+    figfile_suffix = lef.get_figfile_suffix(
+        vinfo, yvar, sites_to_exclude, bootstrap, xvar
+    )
 
     # Save summary figure
-    lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits)
+    lef.plot_fits_1plot(
+        this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits
+    )
 
     # Save plot with subplots for each bin's scatter and fits
-    lef.plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
+    lef.plot_scatter_each_bin(
+        this_dir,
+        version_str,
+        vinfo,
+        edgeareas,
+        xvar,
+        yvar,
+        sites_to_exclude,
+        bootstrap,
+        edgefits,
+        figfile_suffix,
+    )
 
 
 # %% Query a single point
@@ -152,7 +175,7 @@ for xvar in xvar_list:
 #     y *= (1 - x)
 #     y = np.round(100*y, 1)
 #     print(f"{bin}:    \t{y}%")
-    
+
 
 # gridcell_ht = 5
 # print("Patch height:")
