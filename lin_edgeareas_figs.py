@@ -1,9 +1,11 @@
+import __main__ as main
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import pandas as pd
 import lin_edgeareas_module as lem
 
+IS_INTERACTIVE = not hasattr(main, '__file__')
 
 def get_axis_labels(var):
     if var == "forest_from_ea":
@@ -55,7 +57,8 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
     outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fit_lines_1plot", figfile_suffix)
     plt.savefig(outpath)
 
-    plt.show()
+    if IS_INTERACTIVE:
+        plt.show()
 
 
 def plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix):
@@ -147,4 +150,5 @@ def plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xva
         outpath = outpath.replace("pdf", "png")
     plt.savefig(outpath)
 
-    plt.show()
+    if IS_INTERACTIVE:
+        plt.show()
