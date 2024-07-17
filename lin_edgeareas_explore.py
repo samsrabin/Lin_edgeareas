@@ -1,61 +1,69 @@
+"""
+Play with fits to Lin's edge data
+"""
+
 # %% Setup
 
-# Logically it seems like, if a bin has zero area, all deeper bins should also be zero. It looks like this is wrong in the fits: compare bins 7 and 8 at x > 0.8 in fits.20240506.croppast.pdf.
-### Maybe not? Remember that Lin is only counting as "edge" that forest next to crop or pasture. One could imagine nonforest-nonagriculture taking up all of e.g. 500-1000m band. But seems unlikely!
+# Logically it seems like, if a bin has zero area, all deeper bins should also be zero.
+# It looks like this is wrong in the fits: compare bins 7 and 8 at x > 0.8 in
+# fits.20240506.croppast.pdf.
+### Maybe not? Remember that Lin is only counting as "edge" that forest next to crop or pasture.
+# One could imagine nonforest-nonagriculture taking up all of e.g. 500-1000m band.
+# But seems unlikely!
 # Is this ever true in the real sites?
 # Is this avoidable in the fits?
 # If not, how to handle in the model? Just set all deeper bins to zero? (Show this in plots.)
 
 
+import os
+import importlib
 import pandas as pd
 import numpy as np
-import importlib
 import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef
-import os
 
-this_dir = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-# version = 20240506
-# version = 20240605
-version = 20240709
+THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
+# VERSION = 20240506
+# VERSION = 20240605
+VERSION = 20240709
 
 # bin_edges_out = None
-# bin_edges_out = [30, 60, 120, 300]
 bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
-
-# %% Setup
-
-version_str = str(version)
+# bin_edges_out = [30, 60, 120, 300]
 
 
 # %% Import data
 importlib.reload(lem)
 
 # Get version info
-vinfo = lem.get_version_info(version, bin_edges_out)
+vinfo = lem.get_version_info(VERSION, bin_edges_out)
 
 # Import edge areas and land covers
-if version == 20240506:
+if VERSION == 20240506:
     filename_template = os.path.join(
-        this_dir, "inout", version_str, f"Edgearea_clean_%d.csv"
+        THIS_DIR, "inout", str(VERSION), "Edgearea_clean_%d.csv"
     )
-    edgeareas = lem.read_combine_multiple_csvs(filename_template, version)
+    edgeareas = lem.read_combine_multiple_csvs(
+        filename_template, VERSION, bin_edges_out
+    )
     edgeareas = lem.add_missing_bins(edgeareas)
-    landcovers = lem.import_landcovers_20240506(this_dir, version_str)
-elif version == 20240605:
-    filename = os.path.join(this_dir, "inout", version_str, "Edge_landcover_forSam.csv")
-    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(
-        this_dir, filename, version
-    )
-elif version == 20240709:
+    landcovers = lem.import_landcovers_20240506(THIS_DIR, str(VERSION), bin_edges_out)
+elif VERSION == 20240605:
     filename = os.path.join(
-        this_dir, "inout", version_str, "Edge_landcover_forSam_v2.csv"
+        THIS_DIR, "inout", str(VERSION), "Edge_landcover_forSam.csv"
     )
     site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(
-        this_dir, filename, version
+        THIS_DIR, filename, VERSION
+    )
+elif VERSION == 20240709:
+    filename = os.path.join(
+        THIS_DIR, "inout", str(VERSION), "Edge_landcover_forSam_v2.csv"
+    )
+    site_info, siteyear_info, edgeareas, landcovers = lem.read_20240605(
+        THIS_DIR, filename, VERSION
     )
 else:
-    raise RuntimeError(f"Version {version} not recognized")
+    raise RuntimeError(f"Version {VERSION} not recognized")
 
 if vinfo["Nsites"] is None:
     vinfo["Nsites"] = len(np.unique(edgeareas["site"]))
@@ -113,46 +121,46 @@ xvar_list = [
 ]
 
 # Y variable
-yvar = "bin_as_frac_allforest"
+YVAR = "bin_as_frac_allforest"
 
 # Exclude sites?
 # sites_to_exclude = [4]
 sites_to_exclude = []
 
 # Bootstrap resample to ensure even sampling across X-axis?
-bootstrap = False
+BOOTSTRAP = False
 
 for xvar in xvar_list:
 
     edgefits = []
-    for b, bin in enumerate(pd.unique(edgeareas.edge)):
-        ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, bin, vinfo)
-        ef.ef_fit(xvar, yvar, bootstrap)
+    for b, thisbin in enumerate(pd.unique(edgeareas.edge)):
+        ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, thisbin, vinfo)
+        ef.ef_fit(xvar, YVAR, BOOTSTRAP)
         edgefits.append(ef)
         print(ef)
 
     # Get figure filename suffix
-    figfile_suffix = lef.get_figfile_suffix(
-        vinfo, yvar, sites_to_exclude, bootstrap, xvar
+    FIGFILE_SUFFIX = lef.get_figfile_suffix(
+        vinfo, YVAR, sites_to_exclude, BOOTSTRAP, xvar
     )
 
     # Save summary figure
     lef.plot_fits_1plot(
-        this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits
+        THIS_DIR, str(VERSION), FIGFILE_SUFFIX, vinfo, edgeareas, xvar, YVAR, edgefits
     )
 
     # Save plot with subplots for each bin's scatter and fits
     lef.plot_scatter_each_bin(
-        this_dir,
-        version_str,
+        THIS_DIR,
+        str(VERSION),
         vinfo,
         edgeareas,
         xvar,
-        yvar,
+        YVAR,
         sites_to_exclude,
-        bootstrap,
+        BOOTSTRAP,
         edgefits,
-        figfile_suffix,
+        FIGFILE_SUFFIX,
     )
 
 

@@ -1,3 +1,7 @@
+"""
+Functions for making figures
+"""
+
 import __main__ as main
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,12 +11,22 @@ import lin_edgeareas_module as lem
 
 IS_INTERACTIVE = not hasattr(main, "__file__")
 
+# https://stackoverflow.com/questions/58788958/the-smallest-valid-alpha-value-in-matplotlib
+MIN_ALPHA = 1 / 510
+
 # For making plots of predicted values across entire 0-1 range of X-axis
-step_01 = 0.001
-XDATA_01 = np.arange(0, 1 + step_01, step_01)
+STEP_01 = 0.001
+XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
+
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-branches
 
 
 def get_axis_labels(var):
+    """
+    Get axis labels
+    """
     if var == "forest_from_ea":
         axis = "Forested fraction (sum all edge bins)"
     elif var == "bin_as_frac_allforest":
@@ -29,11 +43,17 @@ def get_axis_labels(var):
 
 
 def get_color(vinfo, b):
+    """
+    Get color for the given bin
+    """
     color = colormaps["jet_r"](b / (vinfo["Nbins_out"] - 1))
     return color
 
 
 def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
+    """
+    Get filename suffix for the current figure
+    """
     figfile_suffix = ".".join(
         [
             xvar,
@@ -57,15 +77,18 @@ def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
 def plot_fits_1plot(
     this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits
 ):
+    """
+    Save summary figure
+    """
     ydata_yb = lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits, restrict_x=True)
     ydata_adj_yb = lem.adjust_predicted_fits(
         lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
 
-    for b, bin in enumerate(vinfo["bins_out"]):
+    for b in np.arange(len(vinfo["bins_out"])):
         color = get_color(vinfo, b)
         plt.plot(XDATA_01, ydata_yb[:, b], color=color)
-    for b, bin in enumerate(vinfo["bins_out"]):
+    for b in np.arange(len(vinfo["bins_out"])):
         color = get_color(vinfo, b)
         plt.plot(XDATA_01, ydata_adj_yb[:, b], "--", color=color)
 
@@ -103,6 +126,9 @@ def plot_scatter_each_bin(
     edgefits,
     figfile_suffix,
 ):
+    """
+    Save plot with subplots for each bin's scatter and fits
+    """
     sitecolors = list(colormaps["Set2"].colors[0 : vinfo["Nsites"]])
     sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
 
@@ -121,18 +147,15 @@ def plot_scatter_each_bin(
         nx,
         figsize=(figsizex, figsizey),
     )
-    Nextra = ny * nx - vinfo["Nbins_out"]
 
-    for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
         # Get dataframe with just this edge, indexed by Year-site
         ef = edgefits[b]
 
         # Visualize
         plt.sca(fig.axes[b])
         alpha = min(1, 8.635 / vinfo["Nsites"])
-        alpha = max(
-            alpha, 1 / 510
-        )  # https://stackoverflow.com/questions/58788958/the-smallest-valid-alpha-value-in-matplotlib
+        alpha = max(alpha, MIN_ALPHA)
         if sep_sites:
             sitelist = [i[1] for i in ef.thisedge_df.index]
             for s, site in enumerate(np.unique(sitelist)):
@@ -171,7 +194,7 @@ def plot_scatter_each_bin(
         # Add chart info
         if sep_sites:
             plt.legend(title="Site")
-        title_bin = f"Bin {bin}: {vinfo['bins_out'][b]} m: "
+        title_bin = f"Bin {this_bin}: {vinfo['bins_out'][b]} m: "
         title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
         plt.title(title_bin + title_fit)
         plt.xlabel(get_axis_labels(xvar))
@@ -189,7 +212,7 @@ def plot_scatter_each_bin(
     ydata_adj_yb = lem.adjust_predicted_fits(
         lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
-    for b, bin in enumerate(pd.unique(edgeareas.edge)):
+    for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
         fig.axes[b].plot(XDATA_01, ydata_adj_yb[:, b], "--k")
 
     # Save
