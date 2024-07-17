@@ -84,6 +84,7 @@ def plot_fits_1plot(
     ydata_adj_yb = lem.adjust_predicted_fits(
         lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
+    plt.figure()
 
     for b in np.arange(len(vinfo["bins_out"])):
         color = get_color(vinfo, b)
