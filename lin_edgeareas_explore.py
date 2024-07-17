@@ -27,10 +27,6 @@ bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
 
 version_str = str(version)
 
-# For making plots of predicted values across entire 0-1 range of X-axis
-step_01 = 0.001
-xdata_01 = np.arange(0, 1 + step_01, step_01)
-
 
 # %% Import data
 importlib.reload(lem)
@@ -95,6 +91,7 @@ if any(totalareas.isna().sum()):
             print(f"   Year {y}: {sites_missing_thisyear}")
     raise RuntimeError("NaN(s) found in totalareas")
 
+
 # %% Fit data
 importlib.reload(lem)
 importlib.reload(lef)
@@ -127,30 +124,13 @@ for xvar in xvar_list:
         print(ef)
 
     # Get figure filename suffix
-    figfile_suffix = ".".join([
-        xvar,
-        yvar,
-    ])
-    if sites_to_exclude:
-        figfile_suffix = figfile_suffix + "." + ",".join(
-            [str(x)for x in sites_to_exclude]
-        )
-    if bootstrap:
-        figfile_suffix = ".".join(
-            [figfile_suffix, "bs"]
-        )
-    if vinfo["bin_mapping"] is not None:
-        figfile_suffix = ".".join(
-            [figfile_suffix, "-".join(
-                [str(x) for x in vinfo["bin_edges_out"]]
-            )]
-        )
+    figfile_suffix = lef.get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar)
 
     # Save summary figure
-    lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits)
+    lef.plot_fits_1plot(this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits)
 
     # Save plot with subplots for each bin's scatter and fits
-    lef.plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
+    lef.plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix)
 
 
 # %% Query a single point

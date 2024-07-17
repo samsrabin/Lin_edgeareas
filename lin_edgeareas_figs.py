@@ -7,6 +7,10 @@ import lin_edgeareas_module as lem
 
 IS_INTERACTIVE = not hasattr(main, '__file__')
 
+# For making plots of predicted values across entire 0-1 range of X-axis
+step_01 = 0.001
+XDATA_01 = np.arange(0, 1 + step_01, step_01)
+
 def get_axis_labels(var):
     if var == "forest_from_ea":
         axis = "Forested fraction (sum all edge bins)"
@@ -28,18 +32,41 @@ def get_color(vinfo, b):
     return color
 
 
-def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edgeareas, xvar, yvar, edgefits):
-    ydata_yb = lem.predict_multiple_fits(xdata_01, edgeareas, edgefits, restrict_x=True)
+def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
+    figfile_suffix = ".".join([
+        xvar,
+        yvar,
+    ])
+    if sites_to_exclude:
+        figfile_suffix = figfile_suffix + "." + ",".join(
+            [str(x)for x in sites_to_exclude]
+        )
+    if bootstrap:
+        figfile_suffix = ".".join(
+            [figfile_suffix, "bs"]
+        )
+    if vinfo["bin_mapping"] is not None:
+        figfile_suffix = ".".join(
+            [figfile_suffix, "-".join(
+                [str(x) for x in vinfo["bin_edges_out"]]
+            )]
+        )
+        
+    return figfile_suffix
+
+
+def plot_fits_1plot(this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits):
+    ydata_yb = lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits, restrict_x=True)
     ydata_adj_yb = lem.adjust_predicted_fits(
-    lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
+    lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
 
     for b, bin in enumerate(vinfo["bins_out"]):
         color = get_color(vinfo, b)
-        plt.plot(xdata_01, ydata_yb[:,b], color=color)
+        plt.plot(XDATA_01, ydata_yb[:,b], color=color)
     for b, bin in enumerate(vinfo["bins_out"]):
         color = get_color(vinfo, b)
-        plt.plot(xdata_01, ydata_adj_yb[:,b], "--", color=color)
+        plt.plot(XDATA_01, ydata_adj_yb[:,b], "--", color=color)
     
     # Get legend
     legend = []
@@ -61,7 +88,7 @@ def plot_fits_1plot(this_dir, version_str, figfile_suffix, xdata_01, vinfo, edge
         plt.show()
 
 
-def plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix):
+def plot_scatter_each_bin(this_dir, version_str, vinfo, edgeareas, xvar, yvar, sites_to_exclude, bootstrap, edgefits, figfile_suffix):
     sitecolors = list(colormaps["Set2"].colors[0:vinfo["Nsites"]])
     sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
 
@@ -139,10 +166,10 @@ def plot_scatter_each_bin(this_dir, version_str, xdata_01, vinfo, edgeareas, xva
 
     # Add lines with adjustments to sum to 1
     ydata_adj_yb = lem.adjust_predicted_fits(
-    lem.predict_multiple_fits(xdata_01, edgeareas, edgefits)
+    lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
     for b, bin in enumerate(pd.unique(edgeareas.edge)):
-        fig.axes[b].plot(xdata_01, ydata_adj_yb[:,b], '--k')
+        fig.axes[b].plot(XDATA_01, ydata_adj_yb[:,b], '--k')
 
     # Save
     outpath = lem.get_figure_filepath(this_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix)
