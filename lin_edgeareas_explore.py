@@ -154,30 +154,30 @@ for xvar in xvar_list:
 
 
 # %% Query a single point
-importlib.reload(lem)
+# importlib.reload(lem)
 
-x = 0.5
+# x = 0.5
 
-ydata = lem.predict_multiple_fits(np.array([x]), edgeareas, edgefits, restrict_x=False)
+# ydata = lem.predict_multiple_fits(np.array([x]), edgeareas, edgefits, restrict_x=False)
 
-print("Fraction of forest:")
-for b, bin in enumerate(vinfo["bins_out"]):
-    y = ydata[0][b]
-    y = np.round(100*y, 1)
-    print(f"{bin}:    \t{y}%")
+# print("Fraction of forest:")
+# for b, bin in enumerate(vinfo["bins_out"]):
+#     y = ydata[0][b]
+#     y = np.round(100*y, 1)
+#     print(f"{bin}:    \t{y}%")
 
-print("Fraction of gridcell (assuming just forest and $xaxis):")
-for b, bin in enumerate(vinfo["bins_out"]):
-    y = ydata[0][b]
-    y *= (1 - x)
-    y = np.round(100*y, 1)
-    print(f"{bin}:    \t{y}%")
+# print("Fraction of gridcell (assuming just forest and $xaxis):")
+# for b, bin in enumerate(vinfo["bins_out"]):
+#     y = ydata[0][b]
+#     y *= (1 - x)
+#     y = np.round(100*y, 1)
+#     print(f"{bin}:    \t{y}%")
     
 
-gridcell_ht = 5
-print("Patch height:")
-for b, bin in enumerate(vinfo["bins_out"]):
-    y = ydata[0][b]
-    y *= (1 - x)*5
-    y = np.round(y, 1)
-    print(f"{bin}:    \t{y}")
+# gridcell_ht = 5
+# print("Patch height:")
+# for b, bin in enumerate(vinfo["bins_out"]):
+#     y = ydata[0][b]
+#     y *= (1 - x)*5
+#     y = np.round(y, 1)
+#     print(f"{bin}:    \t{y}")
