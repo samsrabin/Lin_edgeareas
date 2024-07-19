@@ -78,7 +78,7 @@ def plot_fits_1plot(
     """
     Save summary figure
     """
-    ydata_yb, ydata_adj_yb = edgefits.get_all_fits_and_adjs()
+    ydata_yb, ydata_adj_yb = edgefits.get_all_fits_and_adjs(restrict_x=False)
     plt.figure()
 
     for b in np.arange(len(vinfo["bins_out"])):

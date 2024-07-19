@@ -54,13 +54,13 @@ class EdgeFitListType:
             output += "\n" + str(ef)
         return output
 
-    def _adjust_predicted_fits(self, ydata_yb):
+    def _adjust_predicted_fits(self, ydata_yb, restrict_x):
         # Checks
         if ydata_yb.ndim == 1 or ydata_yb.shape[1] == 1:
             raise RuntimeError(
                 "It only makes sense to call adjust_predicted_fits() with multiple bins!"
             )
-        if np.any(np.isnan(ydata_yb)):
+        if not restrict_x and np.any(np.isnan(ydata_yb)):
             raise RuntimeError("Unexpected NaN before adjusting predicted fits")
 
         # Don't allow negative areas
@@ -86,9 +86,9 @@ class EdgeFitListType:
             ef.ef_fit(finfo)
             self.edgefits.append(ef)
 
-    def get_all_fits_and_adjs(self, xdata=XDATA_01):
-        ydata_yb = self._predict_multiple_fits(xdata, restrict_x=True)
-        ydata_adj_yb = self._adjust_predicted_fits(ydata_yb)
+    def get_all_fits_and_adjs(self, xdata=XDATA_01, restrict_x=True):
+        ydata_yb = self._predict_multiple_fits(xdata, restrict_x=restrict_x)
+        ydata_adj_yb = self._adjust_predicted_fits(ydata_yb, restrict_x)
         return ydata_yb, ydata_adj_yb
 
     def _get_performance_info(self):
