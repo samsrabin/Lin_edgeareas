@@ -515,3 +515,14 @@ def combine_bins(edgeareas, vinfo):
     ), "Error combining input to output bins"
 
     return edgeareas2
+
+def drop_siteyears_without_obs(df, sitearea):
+    df = df.set_index(sitearea.index.names)
+    df = df.join(sitearea)
+    missing_obs = df["sitearea"] == 0
+    n_zero = np.sum(missing_obs)
+    print(f"Dropping {n_zero} site-years with no observations")
+    df = df[~missing_obs]
+    df = df.drop(columns="sitearea")
+    df = df.reset_index()
+    return df

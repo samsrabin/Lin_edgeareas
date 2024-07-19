@@ -98,11 +98,15 @@ for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
     if any(totalareas.isna().sum()):
         raise RuntimeError("NaN(s) found in totalareas")
 
-# %% Total area
+# Total area
 site_area = landcovers.groupby(["Year", "site"]).sum()
 totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
-# %% There should be no NaNs
+# Drop site-years with no observations
+edgeareas = lem.drop_siteyears_without_obs(edgeareas, totalareas["sitearea"])
+landcovers = lem.drop_siteyears_without_obs(landcovers, totalareas["sitearea"])
+
+# There should be no NaNs
 if any(totalareas.isna().sum()):
     if any(totalareas["sitearea"].isna()):
         print("Sites/gridIDs missing landcovers outside 51-59:")
