@@ -80,9 +80,9 @@ def plot_fits_1plot(
     """
     Save summary figure
     """
-    ydata_yb = lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits, restrict_x=True)
+    ydata_yb = lem.predict_multiple_fits(XDATA_01, edgefits, restrict_x=True)
     ydata_adj_yb = lem.adjust_predicted_fits(
-        lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
+        lem.predict_multiple_fits(XDATA_01, edgefits)
     )
     plt.figure()
 
@@ -212,7 +212,7 @@ def plot_scatter_each_bin(
 
     # Add lines with adjustments to sum to 1
     ydata_adj_yb = lem.adjust_predicted_fits(
-        lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
+        lem.predict_multiple_fits(XDATA_01, edgefits)
     )
     for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
         xdata, ydata = sort_xy_data(XDATA_01, ydata_adj_yb[:, b])

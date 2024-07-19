@@ -597,12 +597,17 @@ def label_landcovers(landcovers_legend, landcovers):
     return landcovers
 
 
-def predict_multiple_fits(xdata, edgeareas, edgefits, restrict_x=False):
-    for b in np.arange(len(pd.unique(edgeareas.edge))):
-        ydata = edgefits[b].predict(xdata)
-        if restrict_x:
-            ydata[xdata < min(edgefits[b].fit_xdata)] = np.nan
-            ydata[xdata > max(edgefits[b].fit_xdata)] = np.nan
+def predict_multiple_fits(xdata, edgefits, restrict_x=False):
+    for b, edgefit in enumerate(edgefits):
+        edgefit = edgefits[b]
+        if xdata is None:
+            xdata = edgefit.fit_xdata
+            ydata = edgefit.fit_ydata
+        else:
+            ydata = edgefit.predict(xdata)
+            if restrict_x:
+                ydata[xdata < min(edgefit.fit_xdata)] = np.nan
+                ydata[xdata > max(edgefit.fit_xdata)] = np.nan
         if b == 0:
             ydata_yb = np.expand_dims(ydata, axis=1)
         else:
