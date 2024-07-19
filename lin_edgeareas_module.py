@@ -23,29 +23,31 @@ def add_missing_bins(edgeareas):
     """
     Some site-years have bins missing because they had zero area. Add those zeroes.
     """
-    edgeareas2 = pd.DataFrame()
-    index_list = ["Year", "edge"]
-    for site in edgeareas["site"].unique():
-        df = edgeareas[edgeareas["site"] == site]
-        for index in index_list:
-            if index == "edge":
-                # All site-years SHOULD have every edge, but don't necessarily
-                cats = edgeareas["edge"].unique()
-            else:
-                # Only include years where this site has observations
-                cats = df[index].unique()
-            with pd.option_context("mode.chained_assignment", None):
-                df[index] = pd.Categorical(df[index], categories=cats)
-        df = df.groupby(index_list, as_index=False, observed=False).first()
-        df["site"] = df["site"].fillna(site).astype(int)
-        for index in index_list:
-            df[index] = np.array(df[index])
-        edgeareas2 = pd.concat([edgeareas2, df])
-    edgeareas2["sumarea"] = edgeareas2["sumarea"].fillna(0)
+    nsites = len(np.unique(edgeareas["site"]))
+    nedges = len(np.unique(edgeareas["edge"]))
+    nyears = len(np.unique(edgeareas["Year"]))
+
+    expected_edges = np.tile(np.unique(edgeareas["edge"].values), nsites*nyears)
+
+    expected_sites = np.unique(edgeareas["site"].values)
+    expected_sites = np.repeat(expected_sites, nedges)
+    expected_sites = np.tile(expected_sites, nyears)
+
+    expected_years = np.unique(edgeareas["Year"].values)
+    expected_years = np.repeat(expected_years, nedges*nsites)
+
+    sort_vars = ["Year", "site", "edge"]
+    edgeareas2 = edgeareas.sort_values(by=sort_vars)
+    edgeareas2 = edgeareas2.set_index(sort_vars)
+    index_names = tuple(sort_vars)
+    new_multiindex = pd.MultiIndex.from_arrays(
+    [expected_years, expected_sites, expected_edges],
+    names=index_names,
+)
+    edgeareas2 = edgeareas2.reindex(new_multiindex).reset_index()
+    edgeareas2 = edgeareas2.fillna(0)
+    np.sum(np.isnan(edgeareas2))
     return edgeareas2
-
-
-
 
 
 def get_site_lc_area(lc, totalareas, landcovers):
