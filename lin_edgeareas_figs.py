@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import pandas as pd
 import lin_edgeareas_module as lem
+import fitting
 
 IS_INTERACTIVE = not hasattr(main, "__file__")
 
@@ -81,7 +82,7 @@ def plot_fits_1plot(
     Save summary figure
     """
     ydata_yb = lem.predict_multiple_fits(XDATA_01, edgefits, restrict_x=True)
-    ydata_adj_yb = lem.adjust_predicted_fits(
+    ydata_adj_yb = fitting.adjust_predicted_fits(
         lem.predict_multiple_fits(XDATA_01, edgefits)
     )
     plt.figure()
@@ -211,7 +212,7 @@ def plot_scatter_each_bin(
     fig.tight_layout()
 
     # Add lines with adjustments to sum to 1
-    ydata_adj_yb = lem.adjust_predicted_fits(
+    ydata_adj_yb = fitting.adjust_predicted_fits(
         lem.predict_multiple_fits(XDATA_01, edgefits)
     )
     for b, this_bin in enumerate(pd.unique(edgeareas.edge)):

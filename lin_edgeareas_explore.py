@@ -21,6 +21,7 @@ import pandas as pd
 import numpy as np
 import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef
+from EdgeFitType import EdgeFitType
 
 THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 # VERSION = 20240506
@@ -134,7 +135,7 @@ for xvar in xvar_list:
 
     edgefits = []
     for b, thisbin in enumerate(pd.unique(edgeareas.edge)):
-        ef = lem.EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, thisbin, vinfo)
+        ef = EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, thisbin, vinfo)
         ef.ef_fit(xvar, YVAR, BOOTSTRAP)
         edgefits.append(ef)
         print(ef)
