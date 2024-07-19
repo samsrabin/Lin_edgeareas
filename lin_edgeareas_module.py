@@ -214,6 +214,8 @@ def add_missing_bins(edgeareas):
 
 
 def adjust_predicted_fits(ydata_yb):
+    if ydata_yb.ndim ==1 or ydata_yb.shape[1] == 1:
+        raise RuntimeError("It only makes sense to call adjust_predicted_fits() with multiple bins!")
     ydata_yb[ydata_yb < 0] = 0
     axis = len(ydata_yb.shape) - 1
     ydata_yb = ydata_yb / np.sum(ydata_yb, axis=axis, keepdims=True)
