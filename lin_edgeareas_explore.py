@@ -47,7 +47,6 @@ if VERSION == 20240506:
     edgeareas = lem.read_combine_multiple_csvs(
         filename_template, VERSION, bin_edges_out
     )
-    edgeareas = lem.add_missing_bins(edgeareas)
     landcovers = lem.import_landcovers_20240506(THIS_DIR, str(VERSION), bin_edges_out)
 elif VERSION == 20240605:
     filename = os.path.join(
@@ -78,6 +77,9 @@ if any(landcovers.isna().sum()):
 # Combine bins, if needed
 if vinfo["bin_mapping"] is not None:
     edgeareas = lem.combine_bins(edgeareas, vinfo)
+
+# Add any missing rows
+edgeareas = lem.add_missing_bins(edgeareas)
 
 
 # %% Get derived information
