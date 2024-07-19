@@ -203,7 +203,7 @@ def plot_scatter_each_bin(
     fig.tight_layout()
 
     # Add lines with adjustments to sum to 1
-    _, ydata_adj_yb = edgefits.get_all_fits_and_adjs()
+    _, ydata_adj_yb = edgefits.get_all_fits_and_adjs(restrict_x=False)
     for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
         xdata, ydata = sort_xy_data(XDATA_01, ydata_adj_yb[:, b])
         fig.axes[b].plot(xdata, ydata, "--k")
