@@ -55,9 +55,11 @@ class EdgeFitType:
         self.sites_to_exclude = sites_to_exclude
 
         # Initialize other members
-        self.fit_xdata = None
-        self.fit_ydata_in = None
-        self.fit_ydata_out = None
+        self.fit_xdata_orig = None
+        self.fit_ydata_orig = None
+        self.fit_xdata = np.array([])
+        self.fit_ydata = np.array([])
+        self.predicted_ydata = None
         self.fit_type = None
         self.fit_result = None
         self.fit_bootstrapped = None
@@ -94,17 +96,17 @@ class EdgeFitType:
                 croppast_frac_croppastfor=self.thisedge_df.croppast
                 / (self.thisedge_df.fforest + self.thisedge_df.croppast)
             )
-            self.fit_xdata = self.thisedge_df.croppast_frac_croppastfor.values
+            self.fit_xdata_orig = self.thisedge_df.croppast_frac_croppastfor.values
         else:
-            self.fit_xdata = self.thisedge_df[xvar].values
-        self.fit_ydata_in = self.thisedge_df[yvar].values
+            self.fit_xdata_orig = self.thisedge_df[xvar].values
+        self.fit_ydata_orig = self.thisedge_df[yvar].values
 
         # Bootstrap across bins of X-axis to ensure even weighting
         if bootstrap:
             # Set up X-axis bins
             n_xbins = 10
-            x_max = max(self.fit_xdata)
-            x_min = min(self.fit_xdata)
+            x_max = max(self.fit_xdata_orig)
+            x_min = min(self.fit_xdata_orig)
             if x_max <= x_min:
                 raise RuntimeError("x_max must be > x_min")
             step = (x_max - x_min) / (n_xbins)
@@ -116,18 +118,16 @@ class EdgeFitType:
                 lo = bin_boundaries[b]
                 hi = bin_boundaries[b + 1]
                 if b == n_xbins - 1:
-                    cond_hi = self.fit_xdata <= hi
+                    cond_hi = self.fit_xdata_orig <= hi
                 else:
-                    cond_hi = self.fit_xdata < hi
-                cond = cond_hi & (self.fit_xdata >= lo)
+                    cond_hi = self.fit_xdata_orig < hi
+                cond = cond_hi & (self.fit_xdata_orig >= lo)
                 cond_list.append(cond)
 
             # How many samples should we take from each X-axis bin?
             n_choose = max(sum(x) for x in cond_list)
 
             # Take samples
-            xdata = np.array([])
-            ydata = np.array([])
             for cond in cond_list:
                 if not any(cond):
                     continue
@@ -138,22 +138,22 @@ class EdgeFitType:
                     raise RuntimeError(
                         f"Expected {n_choose} samples; got {len(chosen)}"
                     )
-                xdata = np.concatenate((xdata, self.fit_xdata[chosen]))
-                ydata = np.concatenate((ydata, self.fit_ydata_in[chosen]))
-            self.bs_xdata = xdata
-            self.bs_ydata = ydata
+                self.fit_xdata = np.concatenate((self.fit_xdata, self.fit_xdata_orig[chosen]))
+                self.fit_ydata = np.concatenate((self.fit_ydata, self.fit_ydata_orig[chosen]))
+            self.bs_xdata = self.fit_xdata
+            self.bs_ydata = self.fit_ydata
 
             # Check
-            if any(np.isnan(xdata)) or any(np.isnan(ydata)):
+            if any(np.isnan(self.fit_xdata)) or any(np.isnan(self.fit_ydata)):
                 raise RuntimeError("NaN after bootstrap sampling")
             for b in range(n_xbins):
                 lo = bin_boundaries[b]
                 hi = bin_boundaries[b + 1]
                 if b == n_xbins - 1:
-                    cond_hi = xdata <= hi
+                    cond_hi = self.fit_xdata <= hi
                 else:
-                    cond_hi = xdata < hi
-                cond = cond_hi & (xdata >= lo)
+                    cond_hi = self.fit_xdata < hi
+                cond = cond_hi & (self.fit_xdata >= lo)
                 n_found = np.sum(cond)
                 if not any(cond_list[b]):
                     n_expected = 0
@@ -164,17 +164,20 @@ class EdgeFitType:
                         f"Expected {n_expected} points in {lo}-{hi}; found {n_found}"
                     )
         else:
-            xdata = self.fit_xdata
-            ydata = self.fit_ydata_in
+            self.fit_xdata = self.fit_xdata_orig
+            self.fit_ydata = self.fit_ydata_orig
 
         # Sort X and Y data (helpful for plotting)
-        isort = np.argsort(self.fit_xdata)
+        isort = np.argsort(self.fit_xdata_orig)
+        self.fit_xdata_orig = self.fit_xdata_orig[isort]
+        self.fit_ydata_orig = self.fit_ydata_orig[isort]
+        isort = np.argsort(self.fit_xdata_orig)
         self.fit_xdata = self.fit_xdata[isort]
-        self.fit_ydata_in = self.fit_ydata_in[isort]
+        self.fit_ydata = self.fit_ydata[isort]
 
         # Get best fit
-        self.fit_type, self.fit_result = fit(xdata, ydata)
-        self.fit_ydata_out = self.predict(xdata)
+        self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata)
+        self.predicted_ydata = self.predict(self.fit_xdata)
 
         # Get RMSE
         self.nrmse = np.sum((ydata - self.fit_ydata_out) ** 2) ** 0.5 / np.mean(ydata)

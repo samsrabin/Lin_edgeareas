@@ -190,7 +190,8 @@ def plot_scatter_each_bin(
             )
 
         # Add best fit
-        plt.plot(ef.fit_xdata, ef.predict(ef.fit_xdata), "-k")
+        xdata, ydata = sort_xy_data(ef.fit_xdata, ef.predict(ef.fit_xdata))
+        plt.plot(xdata, ydata , "-k")
 
         # Add chart info
         if sep_sites:
@@ -214,7 +215,8 @@ def plot_scatter_each_bin(
         lem.predict_multiple_fits(XDATA_01, edgeareas, edgefits)
     )
     for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
-        fig.axes[b].plot(XDATA_01, ydata_adj_yb[:, b], "--k")
+        xdata, ydata = sort_xy_data(XDATA_01, ydata_adj_yb[:, b])
+        fig.axes[b].plot(xdata, ydata, "--k")
 
     # Save
     outpath = lem.get_figure_filepath(
@@ -226,3 +228,11 @@ def plot_scatter_each_bin(
 
     if IS_INTERACTIVE:
         plt.show()
+
+def sort_xy_data(xdata, ydata):
+    if xdata.shape != ydata.shape:
+        raise RuntimeError(f"Shapes of xdata ({xdata.shape}) and ydata ({ydata.shape}) differ")
+    isort = np.argsort(xdata)
+    xdata = xdata[isort]
+    ydata = ydata[isort]
+    return xdata, ydata
