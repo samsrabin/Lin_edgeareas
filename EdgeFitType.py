@@ -59,17 +59,14 @@ class EdgeFitType:
         self.predicted_ydata = None
         self.fit_type = None
         self.fit_result = None
-        self.fit_bootstrapped = None
-        self.fit_xvar = None
-        self.fit_yvar = None
         self.bs_xdata = None
         self.bs_ydata = None
         self.nrmse = None
         self.nrmse_adj = None
-        self.get_net_km2_error = None
         self.km2_error = None
         self.km2_error_adj = None
         self.predicted_adj_ydata = None
+        self.finfo = None
 
     def __str__(self):
         prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
@@ -103,9 +100,7 @@ class EdgeFitType:
         return output
 
     def ef_fit(self, finfo):
-        self.fit_xvar = finfo["xvar"]
-        self.fit_yvar = finfo["yvar"]
-        self.fit_bootstrapped = finfo["bootstrap"]
+        self.finfo = finfo
 
         # Get X and Y data for fitting, plus anything for analysis
         if finfo["xvar"] == "croppast_frac_croppastfor":
@@ -117,16 +112,6 @@ class EdgeFitType:
         else:
             self.fit_xdata_orig = self.thisedge_df[finfo["xvar"]].values
         self.fit_ydata_orig = self.thisedge_df[finfo["yvar"]].values
-        if finfo["bootstrap"]:
-            print("Not yet able to get net km2 error when bootstrapping")
-        elif self.fit_yvar == "bin_as_frac_allforest":
-            def get_net_km2_error(self, fit_vals, obs_vals, indices=None):
-                diff_area = (fit_vals - obs_vals) * self.all_forest_area
-                if indices is not None:
-                    diff_area = diff_area[indices]
-                return diff_area
-        else:
-            print(f"You haven't told me how to get net km2 error for fit_yvar {self.fit_yvar}. Skipping.")
 
         # Bootstrap across bins of X-axis to ensure even weighting
         if finfo["bootstrap"]:
@@ -220,3 +205,18 @@ class EdgeFitType:
 
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
+
+    def get_net_km2_error(self, fit_vals, obs_vals, indices=None):
+        diff_area = None
+
+        if self.finfo["bootstrap"]:
+            print("Not yet able to get net km2 error when bootstrapping")
+        elif self.finfo["yvar"] == "bin_as_frac_allforest":
+            diff_area = (fit_vals - obs_vals) * self.all_forest_area
+        else:
+            print(f"You haven't told me how to get net km2 error for fit_yvar {self.finfo['yvar']}. Skipping.")
+
+        if diff_area is not None and indices is not None:
+            diff_area = diff_area[indices]
+
+        return diff_area

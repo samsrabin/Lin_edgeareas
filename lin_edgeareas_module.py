@@ -57,14 +57,14 @@ def get_site_lc_area(lc, totalareas, landcovers):
 
 
 def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
-    outfile = f"{title}.{version}.{ef.fit_xvar}"
+    outfile = f"{title}.{version}.{ef.finfo['xvar']}"
     if ef.sites_to_exclude:
         outfile += ".excl"
         for s, site in enumerate(ef.sites_to_exclude):
             if s > 0:
                 outfile += ","
             outfile += str(site)
-    if ef.fit_bootstrapped:
+    if ef.finfo["bootstrap"]:
         outfile += ".bs"
     outfile += "." + figfile_suffix
     outfile += ".pdf"

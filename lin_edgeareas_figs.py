@@ -160,8 +160,8 @@ def plot_scatter_each_bin(
 
                 thisedgesite_df.plot(
                     ax=fig.axes[b],
-                    x=ef.fit_xvar,
-                    y=ef.fit_yvar,
+                    x=ef.finfo["xvar"],
+                    y=ef.finfo["yvar"],
                     color=sitecolors[s],
                     label=site,
                     kind="scatter",
@@ -175,8 +175,8 @@ def plot_scatter_each_bin(
         else:
             ef.thisedge_df.plot(
                 ax=fig.axes[b],
-                x=ef.fit_xvar,
-                y=ef.fit_yvar,
+                x=ef.finfo["xvar"],
+                y=ef.finfo["yvar"],
                 alpha=alpha,
                 kind="scatter",
             )
@@ -191,8 +191,8 @@ def plot_scatter_each_bin(
         title_bin = f"Bin {this_bin}: {vinfo['bins_out'][b]} m: "
         title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
         plt.title(title_bin + title_fit)
-        plt.xlabel(get_axis_labels(ef.fit_xvar))
-        plt.ylabel(get_axis_labels(ef.fit_yvar))
+        plt.xlabel(get_axis_labels(ef.finfo["xvar"]))
+        plt.ylabel(get_axis_labels(ef.finfo["yvar"]))
 
     # Get rid of unused axes
     for x in np.arange(nx):
