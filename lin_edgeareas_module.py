@@ -33,12 +33,16 @@ class EdgeFitType:
         self.thisedge_df = self.thisedge_df[
             self.thisedge_df.index.isin(sites_to_include, level="site")
         ]
+        self.binarea = self.thisedge_df["sumarea"].values
         self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
 
         # Join with areas of different land cover types
         self.thisedge_df = self.thisedge_df.join(totalareas)
         if any(self.thisedge_df.isna().sum()):
             raise RuntimeError("NaN(s) found after joining thisedge_df and totalareas")
+
+        # Get total forest area in this bin's gridcell
+        self.all_forest_area = self.thisedge_df["forest_from_ea"].values.copy()
 
         # Convert to fractional area
         self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
@@ -69,7 +73,10 @@ class EdgeFitType:
         self.bs_ydata = None
         self.nrmse = None
         self.nrmse_adj = None
-        self.fit_ydata_out_adj = None
+        self.get_net_km2_error = None
+        self.km2_error = None
+        self.km2_error_adj = None
+        self.predicted_adj_ydata = None
 
     def __str__(self):
         prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
@@ -81,7 +88,24 @@ class EdgeFitType:
                 + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
             )
 
-        output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment)"
+
+        if self.km2_error is not None:
+            output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment) {np.max(self.binarea)}"
+            decimals = 2
+            km2_error = np.round(self.km2_error, decimals)
+            km2_error_adj = np.round(self.km2_error_adj, decimals)
+            total_bin_area = np.sum(self.binarea)
+            pct_error = 100 * self.km2_error / total_bin_area
+            pct_error_adj = 100 * self.km2_error_adj / total_bin_area
+            decimals = 1
+            pct_error = np.round(pct_error, decimals)
+            pct_error_adj = np.round(pct_error_adj, decimals)
+            output += f"\n   (Adjustment changes net error from {km2_error} [{pct_error}%] to {km2_error_adj} [{pct_error_adj}%])"
+
+            # output += "\n   =========Troubleshooting========="
+            # output += f"\n   Bin area, obs: {np.sum(self.binarea)}"
+            # output += f"\n   Bin area, fit: {np.sum(self.fit_ydata_out*self.all_forest_area)}"
+            # output += f"\n   Bin area, adj: {np.sum(self.fit_ydata_out_adj*self.all_forest_area)}"
 
         return output
 
@@ -90,7 +114,7 @@ class EdgeFitType:
         self.fit_yvar = yvar
         self.fit_bootstrapped = bootstrap
 
-        # Get X and Y data for fitting
+        # Get X and Y data for fitting, plus anything for analysis
         if xvar == "croppast_frac_croppastfor":
             self.thisedge_df = self.thisedge_df.assign(
                 croppast_frac_croppastfor=self.thisedge_df.croppast
@@ -100,6 +124,16 @@ class EdgeFitType:
         else:
             self.fit_xdata_orig = self.thisedge_df[xvar].values
         self.fit_ydata_orig = self.thisedge_df[yvar].values
+        if bootstrap:
+            print("Not yet able to get net km2 error when bootstrapping")
+        elif self.fit_yvar == "bin_as_frac_allforest":
+            def get_net_km2_error(self, fit_vals, obs_vals, indices=None):
+                diff_area = (fit_vals - obs_vals) * self.all_forest_area
+                if indices is not None:
+                    diff_area = diff_area[indices]
+                return diff_area
+        else:
+            print(f"You haven't told me how to get net km2 error for fit_yvar {self.fit_yvar}. Skipping.")
 
         # Bootstrap across bins of X-axis to ensure even weighting
         if bootstrap:
@@ -179,12 +213,17 @@ class EdgeFitType:
         self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata)
         self.predicted_ydata = self.predict(self.fit_xdata)
 
-        # Get RMSE
-        self.nrmse = np.sum((ydata - self.fit_ydata_out) ** 2) ** 0.5 / np.mean(ydata)
-        self.fit_ydata_out_adj = adjust_predicted_fits(self.fit_ydata_out)
+    # Get RMSE
+    def get_rmse(self, get_net_km2_error):
+        self.nrmse = np.sum((self.fit_ydata - self.predicted_ydata) ** 2) ** 0.5 / np.mean(self.fit_ydata)
         self.nrmse_adj = (
-            np.sum((ydata - self.fit_ydata_out_adj) ** 2)
-        ) ** 0.5 / np.mean(ydata)
+            np.sum((self.fit_ydata - self.predicted_adj_ydata) ** 2)
+        ) ** 0.5 / np.mean(self.fit_ydata)
+
+        # Get km2 error
+        if get_net_km2_error is not None:
+            self.km2_error = get_net_km2_error(self.predicted_ydata, self.fit_ydata)
+            self.km2_error_adj = get_net_km2_error(self.predicted_adj_ydata, self.fit_ydata)
 
     def predict(self, xdata):
         return self.fit_result.eval(x=xdata)
@@ -316,13 +355,13 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
 
     # Try all fits
     results = {}
-    results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)
-    results["logistic"] = _fit_logistic(xdata, ydata)
-    results["exponential"] = _fit_exponential(xdata, ydata)
+    # results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)
+    # results["logistic"] = _fit_logistic(xdata, ydata)
+    # results["exponential"] = _fit_exponential(xdata, ydata)
     results["linear"] = _fit_linear(xdata, ydata)
     results["quadratic"] = _fit_quadratic(xdata, ydata)
-    results["gaussian"] = _fit_gaussian(xdata, ydata)
-    results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
+    # results["gaussian"] = _fit_gaussian(xdata, ydata)
+    # results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
 
     # Find best fit
     best_fit = None
