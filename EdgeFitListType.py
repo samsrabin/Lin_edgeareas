@@ -70,7 +70,8 @@ class EdgeFitListType:
         axis = len(ydata_yb.shape) - 1
         ydata_y = np.sum(ydata_yb, axis=axis, keepdims=True)
         ydata_yb = ydata_yb / ydata_y
-        ydata_yb[:,np.isnan(ydata_y)] = 0
+        is_nan = np.squeeze(np.isnan(ydata_y))
+        ydata_yb[is_nan,:] = 0
 
         # Check
         if np.any(np.isnan(ydata_yb)):
