@@ -19,35 +19,45 @@ from lmfit import fit_report  # pylint: disable=unused-import
 STEP_01 = 0.001
 XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
 
-def add_missing_bins(edgeareas):
+def add_missing_bins(df, which_df):
     """
     Some site-years have bins missing because they had zero area. Add those zeroes.
     """
-    nsites = len(np.unique(edgeareas["site"]))
-    nedges = len(np.unique(edgeareas["edge"]))
-    nyears = len(np.unique(edgeareas["Year"]))
 
-    expected_edges = np.tile(np.unique(edgeareas["edge"].values), nsites*nyears)
+    if np.any(np.isnan(df)):
+        raise RuntimeError("add_missing_bins() received a DataFrame with NaNs")
 
-    expected_sites = np.unique(edgeareas["site"].values)
-    expected_sites = np.repeat(expected_sites, nedges)
+    if which_df == "edgeareas":
+        third_index = "edge"
+    elif which_df == "landcovers":
+        third_index = "landcover_num"
+    else:
+        raise RuntimeError(f"Unrecognized which_df: {which_df}")
+
+    nsites = len(np.unique(df["site"]))
+    nyears = len(np.unique(df["Year"]))
+    n3rd = len(np.unique(df[third_index]))
+
+    expected_edges = np.tile(np.unique(df[third_index].values), nsites*nyears)
+
+    expected_sites = np.unique(df["site"].values)
+    expected_sites = np.repeat(expected_sites, n3rd)
     expected_sites = np.tile(expected_sites, nyears)
 
-    expected_years = np.unique(edgeareas["Year"].values)
-    expected_years = np.repeat(expected_years, nedges*nsites)
+    expected_years = np.unique(df["Year"].values)
+    expected_years = np.repeat(expected_years, n3rd*nsites)
 
-    sort_vars = ["Year", "site", "edge"]
-    edgeareas2 = edgeareas.sort_values(by=sort_vars)
-    edgeareas2 = edgeareas2.set_index(sort_vars)
+    sort_vars = ["Year", "site", third_index]
+    df2 = df.sort_values(by=sort_vars)
+    df2 = df2.set_index(sort_vars)
     index_names = tuple(sort_vars)
     new_multiindex = pd.MultiIndex.from_arrays(
-    [expected_years, expected_sites, expected_edges],
-    names=index_names,
-)
-    edgeareas2 = edgeareas2.reindex(new_multiindex).reset_index()
-    edgeareas2 = edgeareas2.fillna(0)
-    np.sum(np.isnan(edgeareas2))
-    return edgeareas2
+        [expected_years, expected_sites, expected_edges],
+        names=index_names,
+    )
+    df2 = df2.reindex(new_multiindex).reset_index()
+    df2 = df2.fillna(0)
+    return df2
 
 
 def get_site_lc_area(lc, totalareas, landcovers):
@@ -467,6 +477,9 @@ def read_20240605(this_dir, filename_csv, version):
         raise ValueError(
             f"last_edge_pasture is {last_edge_pasture_lc} but first_edge_pasture is None"
         )
+
+    # Add any missing rows
+    landcovers = add_missing_bins(landcovers, "landcovers")
 
     # Check landcovers
     if any(landcovers.isna().sum()):

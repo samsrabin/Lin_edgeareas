@@ -23,9 +23,11 @@ class EdgeFitType:
             .drop(columns="edge")
             .set_index(["Year", "site"], verify_integrity=True)
         )
+        x=1
         self.thisedge_df = self.thisedge_df[
             self.thisedge_df.index.isin(sites_to_include, level="site")
         ]
+        print(f"{len(self.thisedge_df)} records in self.thisedge_df")
         self.binarea = self.thisedge_df["sumarea"].values
         self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
 

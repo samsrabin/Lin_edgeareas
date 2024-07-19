@@ -79,7 +79,7 @@ if vinfo["bin_mapping"] is not None:
     edgeareas = lem.combine_bins(edgeareas, vinfo)
 
 # Add any missing rows
-edgeareas = lem.add_missing_bins(edgeareas)
+edgeareas = lem.add_missing_bins(edgeareas, "edgeareas")
 
 
 # %% Get derived information
@@ -89,16 +89,20 @@ importlib.reload(lem)
 totalareas = edgeareas.drop(columns="edge")
 totalareas = totalareas.groupby(["Year", "site"])
 totalareas = totalareas.sum().rename(columns={"sumarea": "forest_from_ea"})
+if any(totalareas.isna().sum()):
+    raise RuntimeError("NaN(s) found in totalareas")
 
 # Total derived areas (from landcovers)
 for lc in [x.replace("is_", "") for x in landcovers.columns if "is_" in x]:
     totalareas = lem.get_site_lc_area(lc, totalareas, landcovers)
+    if any(totalareas.isna().sum()):
+        raise RuntimeError("NaN(s) found in totalareas")
 
-# Total area
+# %% Total area
 site_area = landcovers.groupby(["Year", "site"]).sum()
 totalareas = totalareas.assign(sitearea=site_area.sumarea)
 
-# There should be no NaNs
+# %% There should be no NaNs
 if any(totalareas.isna().sum()):
     if any(totalareas["sitearea"].isna()):
         print("Sites/gridIDs missing landcovers outside 51-59:")
