@@ -91,6 +91,11 @@ def _fit_quadratic(xdata, ydata):
 
 def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
 
+    if np.any(np.isnan(xdata)):
+        raise RuntimeError("Unexpected NaN in xdata")
+    if np.any(np.isnan(ydata)):
+        raise RuntimeError("Unexpected NaN in ydata")
+
     # Try all fits
     results = {}
     # results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)

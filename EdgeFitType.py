@@ -182,6 +182,8 @@ class EdgeFitType:
         # Get best fit
         self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata)
         self.predicted_ydata = self.predict(self.fit_xdata)
+        if np.any(np.isnan(self.predicted_ydata)):
+            raise RuntimeError("Unexpected NaN in predicted_ydata")
 
     # Get RMSE
     def get_rmse(self, get_net_km2_error):
@@ -196,19 +198,17 @@ class EdgeFitType:
             self.km2_error_adj = get_net_km2_error(self.predicted_adj_ydata, self.fit_ydata)
 
     def predict(self, xdata):
-        return self.fit_result.eval(x=xdata)
+        result = self.fit_result.eval(x=xdata)
+        if np.any(np.isnan(result)):
+            raise RuntimeError("Unexpected NaN in predict()")
+        return result
 
-    def get_net_km2_error(self, fit_vals, obs_vals, indices=None):
-        diff_area = None
+    def get_bin_area_from_xy(self, data_in):
+        if np.any(np.isnan(data_in)):
+            raise RuntimeError("Unexpected NaN in data_in")
 
-        if self.finfo["bootstrap"]:
-            print("Not yet able to get net km2 error when bootstrapping")
-        elif self.finfo["yvar"] == "bin_as_frac_allforest":
-            diff_area = (fit_vals - obs_vals) * self.all_forest_area
+        if self.finfo["yvar"] == "bin_as_frac_allforest":
+            data_out = data_in * self.all_forest_area
         else:
-            print(f"You haven't told me how to get net km2 error for fit_yvar {self.finfo['yvar']}. Skipping.")
-
-        if diff_area is not None and indices is not None:
-            diff_area = diff_area[indices]
-
-        return diff_area
+            raise RuntimeError(f"Unrecognized yvar: {self.finfo['yvar']}")
+        return data_out
