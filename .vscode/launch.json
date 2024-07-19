@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "Debug lin_edgeareas_explore",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "lin_edgeareas_explore.py",
+            "console": "integratedTerminal"
+        },
     ]
 }
