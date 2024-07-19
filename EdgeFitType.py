@@ -102,22 +102,22 @@ class EdgeFitType:
 
         return output
 
-    def ef_fit(self, xvar, yvar, bootstrap):
-        self.fit_xvar = xvar
-        self.fit_yvar = yvar
-        self.fit_bootstrapped = bootstrap
+    def ef_fit(self, finfo):
+        self.fit_xvar = finfo["xvar"]
+        self.fit_yvar = finfo["yvar"]
+        self.fit_bootstrapped = finfo["bootstrap"]
 
         # Get X and Y data for fitting, plus anything for analysis
-        if xvar == "croppast_frac_croppastfor":
+        if finfo["xvar"] == "croppast_frac_croppastfor":
             self.thisedge_df = self.thisedge_df.assign(
                 croppast_frac_croppastfor=self.thisedge_df.croppast
                 / (self.thisedge_df.fforest + self.thisedge_df.croppast)
             )
             self.fit_xdata_orig = self.thisedge_df.croppast_frac_croppastfor.values
         else:
-            self.fit_xdata_orig = self.thisedge_df[xvar].values
-        self.fit_ydata_orig = self.thisedge_df[yvar].values
-        if bootstrap:
+            self.fit_xdata_orig = self.thisedge_df[finfo["xvar"]].values
+        self.fit_ydata_orig = self.thisedge_df[finfo["yvar"]].values
+        if finfo["bootstrap"]:
             print("Not yet able to get net km2 error when bootstrapping")
         elif self.fit_yvar == "bin_as_frac_allforest":
             def get_net_km2_error(self, fit_vals, obs_vals, indices=None):
@@ -129,7 +129,7 @@ class EdgeFitType:
             print(f"You haven't told me how to get net km2 error for fit_yvar {self.fit_yvar}. Skipping.")
 
         # Bootstrap across bins of X-axis to ensure even weighting
-        if bootstrap:
+        if finfo["bootstrap"]:
             # Set up X-axis bins
             n_xbins = 10
             x_max = max(self.fit_xdata_orig)

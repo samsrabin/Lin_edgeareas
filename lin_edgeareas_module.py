@@ -15,6 +15,10 @@ from lmfit import fit_report  # pylint: disable=unused-import
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+# For making plots of predicted values across entire 0-1 range of X-axis
+STEP_01 = 0.001
+XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
+
 def add_missing_bins(edgeareas):
     """
     Some site-years have bins missing because they had zero area. Add those zeroes.
@@ -302,22 +306,7 @@ def label_landcovers(landcovers_legend, landcovers):
     return landcovers
 
 
-def predict_multiple_fits(xdata, edgefits, restrict_x=False):
-    for b, edgefit in enumerate(edgefits):
-        edgefit = edgefits[b]
-        if xdata is None:
-            xdata = edgefit.fit_xdata
-            ydata = edgefit.fit_ydata
-        else:
-            ydata = edgefit.predict(xdata)
-            if restrict_x:
-                ydata[xdata < min(edgefit.fit_xdata)] = np.nan
-                ydata[xdata > max(edgefit.fit_xdata)] = np.nan
-        if b == 0:
-            ydata_yb = np.expand_dims(ydata, axis=1)
-        else:
-            ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
-    return ydata_yb
+
 
 
 def read_combine_multiple_csvs(filename_template, version, bin_edges_out):

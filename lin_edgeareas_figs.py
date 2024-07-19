@@ -8,16 +8,13 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import pandas as pd
 import lin_edgeareas_module as lem
+from lin_edgeareas_module import XDATA_01
 import fitting
 
 IS_INTERACTIVE = not hasattr(main, "__file__")
 
 # https://stackoverflow.com/questions/58788958/the-smallest-valid-alpha-value-in-matplotlib
 MIN_ALPHA = 1 / 510
-
-# For making plots of predicted values across entire 0-1 range of X-axis
-STEP_01 = 0.001
-XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
@@ -76,15 +73,12 @@ def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
 
 
 def plot_fits_1plot(
-    this_dir, version_str, figfile_suffix, vinfo, edgeareas, xvar, yvar, edgefits
+    this_dir, version_str, figfile_suffix, vinfo, edgefits
 ):
     """
     Save summary figure
     """
-    ydata_yb = lem.predict_multiple_fits(XDATA_01, edgefits, restrict_x=True)
-    ydata_adj_yb = fitting.adjust_predicted_fits(
-        lem.predict_multiple_fits(XDATA_01, edgefits)
-    )
+    ydata_yb, ydata_adj_yb = edgefits.get_all_fits_and_adjs()
     plt.figure()
 
     for b in np.arange(len(vinfo["bins_out"])):
@@ -103,8 +97,8 @@ def plot_fits_1plot(
 
     # Add info
     plt.legend(legend)
-    plt.xlabel(get_axis_labels(xvar))
-    plt.ylabel(get_axis_labels(yvar))
+    plt.xlabel(get_axis_labels(edgefits.finfo["xvar"]))
+    plt.ylabel(get_axis_labels(edgefits.finfo["yvar"]))
     plt.title("Raw (solid) and adjusted (dashed) predictions")
 
     outpath = lem.get_figure_filepath(
@@ -121,10 +115,7 @@ def plot_scatter_each_bin(
     version_str,
     vinfo,
     edgeareas,
-    xvar,
-    yvar,
     sites_to_exclude,
-    bootstrap,
     edgefits,
     figfile_suffix,
 ):
@@ -132,7 +123,7 @@ def plot_scatter_each_bin(
     Save plot with subplots for each bin's scatter and fits
     """
     sitecolors = list(colormaps["Set2"].colors[0 : vinfo["Nsites"]])
-    sep_sites = vinfo["Nsites"] <= 5 and not bootstrap
+    sep_sites = vinfo["Nsites"] <= 5 and not edgefits.finfo["bootstrap"]
 
     # # Portrait
     # nx = 2; figsizex = 11
@@ -169,13 +160,13 @@ def plot_scatter_each_bin(
 
                 thisedgesite_df.plot(
                     ax=fig.axes[b],
-                    x=xvar,
-                    y=yvar,
+                    x=ef.fit_xvar,
+                    y=ef.fit_yvar,
                     color=sitecolors[s],
                     label=site,
                     kind="scatter",
                 )
-        elif bootstrap:
+        elif edgefits.finfo["bootstrap"]:
             heatmap, xedges, yedges = np.histogram2d(ef.bs_xdata, ef.bs_ydata, bins=50)
             extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
             plt.cla()
@@ -184,8 +175,8 @@ def plot_scatter_each_bin(
         else:
             ef.thisedge_df.plot(
                 ax=fig.axes[b],
-                x=xvar,
-                y=yvar,
+                x=ef.fit_xvar,
+                y=ef.fit_yvar,
                 alpha=alpha,
                 kind="scatter",
             )
@@ -200,8 +191,8 @@ def plot_scatter_each_bin(
         title_bin = f"Bin {this_bin}: {vinfo['bins_out'][b]} m: "
         title_fit = f"{ef.fit_type}: r2={np.round(ef.fit_result.rsquared, 3)}"
         plt.title(title_bin + title_fit)
-        plt.xlabel(get_axis_labels(xvar))
-        plt.ylabel(get_axis_labels(yvar))
+        plt.xlabel(get_axis_labels(ef.fit_xvar))
+        plt.ylabel(get_axis_labels(ef.fit_yvar))
 
     # Get rid of unused axes
     for x in np.arange(nx):
@@ -212,9 +203,7 @@ def plot_scatter_each_bin(
     fig.tight_layout()
 
     # Add lines with adjustments to sum to 1
-    ydata_adj_yb = fitting.adjust_predicted_fits(
-        lem.predict_multiple_fits(XDATA_01, edgefits)
-    )
+    _, ydata_adj_yb = edgefits.get_all_fits_and_adjs()
     for b, this_bin in enumerate(pd.unique(edgeareas.edge)):
         xdata, ydata = sort_xy_data(XDATA_01, ydata_adj_yb[:, b])
         fig.axes[b].plot(xdata, ydata, "--k")

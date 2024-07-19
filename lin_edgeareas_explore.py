@@ -21,7 +21,7 @@ import pandas as pd
 import numpy as np
 import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef
-from EdgeFitType import EdgeFitType
+from EdgeFitListType import EdgeFitListType
 
 THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 # VERSION = 20240506
@@ -133,12 +133,13 @@ BOOTSTRAP = False
 
 for xvar in xvar_list:
 
-    edgefits = []
-    for b, thisbin in enumerate(pd.unique(edgeareas.edge)):
-        ef = EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, thisbin, vinfo)
-        ef.ef_fit(xvar, YVAR, BOOTSTRAP)
-        edgefits.append(ef)
-        print(ef)
+    finfo = {
+        "xvar": xvar,
+        "yvar": YVAR,
+        "bootstrap": BOOTSTRAP,
+    }
+
+    edgefits = EdgeFitListType(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
 
     # Get figure filename suffix
     FIGFILE_SUFFIX = lef.get_figfile_suffix(
@@ -147,7 +148,7 @@ for xvar in xvar_list:
 
     # Save summary figure
     lef.plot_fits_1plot(
-        THIS_DIR, str(VERSION), FIGFILE_SUFFIX, vinfo, edgeareas, xvar, YVAR, edgefits
+        THIS_DIR, str(VERSION), FIGFILE_SUFFIX, vinfo, edgefits
     )
 
     # Save plot with subplots for each bin's scatter and fits
@@ -156,10 +157,7 @@ for xvar in xvar_list:
         str(VERSION),
         vinfo,
         edgeareas,
-        xvar,
-        YVAR,
         sites_to_exclude,
-        BOOTSTRAP,
         edgefits,
         FIGFILE_SUFFIX,
     )
