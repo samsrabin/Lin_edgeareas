@@ -26,6 +26,10 @@ class EdgeFitListType:
 
         # Fit all bins
         self.edgefits = []
+        if np.any(np.isnan(edgeareas)):
+            raise RuntimeError("Unexpected NaN in edgeareas")
+        if np.any(np.isnan(totalareas)):
+            raise RuntimeError("Unexpected NaN in totalareas")
         self.fit(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
 
         # Get performance info

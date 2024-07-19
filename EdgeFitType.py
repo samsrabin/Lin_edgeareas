@@ -23,11 +23,9 @@ class EdgeFitType:
             .drop(columns="edge")
             .set_index(["Year", "site"], verify_integrity=True)
         )
-        x=1
         self.thisedge_df = self.thisedge_df[
             self.thisedge_df.index.isin(sites_to_include, level="site")
         ]
-        print(f"{len(self.thisedge_df)} records in self.thisedge_df")
         self.binarea = self.thisedge_df["sumarea"].values
         self.thisedge_df = self.thisedge_df.rename(columns={"sumarea": "bin"})
 
@@ -40,12 +38,20 @@ class EdgeFitType:
         self.all_forest_area = self.thisedge_df["forest_from_ea"].values.copy()
 
         # Convert to fractional area
+        if np.any(np.isnan(self.thisedge_df)):
+            raise RuntimeError("Unexpected NaN in self.thisedge_df")
         self.thisedge_df = self.thisedge_df.div(self.thisedge_df.sitearea, axis=0)
+        if np.any(np.isnan(self.thisedge_df)):
+            raise RuntimeError("Unexpected NaN in self.thisedge_df")
 
         # Get edge bin area as fraction of total forest
+        bin_as_frac_allforest = self.thisedge_df.bin / self.thisedge_df.forest_from_ea
+        bin_as_frac_allforest[self.thisedge_df.forest_from_ea==0] = 0
         self.thisedge_df = self.thisedge_df.assign(
-            bin_as_frac_allforest=self.thisedge_df.bin / self.thisedge_df.forest_from_ea
+            bin_as_frac_allforest=bin_as_frac_allforest,
         )
+        if np.any(np.isnan(self.thisedge_df)):
+            raise RuntimeError("Unexpected NaN in self.thisedge_df")
 
         # Save other info
         self.bin_index = b
@@ -114,6 +120,11 @@ class EdgeFitType:
         else:
             self.fit_xdata_orig = self.thisedge_df[finfo["xvar"]].values
         self.fit_ydata_orig = self.thisedge_df[finfo["yvar"]].values
+
+        if np.any(np.isnan(self.fit_xdata_orig)):
+            raise RuntimeError("Unexpected NaN in self.fit_xdata_orig")
+        if np.any(np.isnan(self.fit_ydata_orig)):
+            raise RuntimeError("Unexpected NaN in self.fit_ydata_orig")
 
         # Bootstrap across bins of X-axis to ensure even weighting
         if finfo["bootstrap"]:
