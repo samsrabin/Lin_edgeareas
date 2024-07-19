@@ -137,8 +137,12 @@ class EdgeFitListType:
                 if np.any(np.isnan(ydata)):
                     raise RuntimeError("Unexpected NaN after calling edgefit.predict()")
                 if restrict_x:
-                    ydata[xdata < min(edgefit.fit_xdata)] = np.nan
-                    ydata[xdata > max(edgefit.fit_xdata)] = np.nan
+                    is_too_low = xdata < min(edgefit.fit_xdata)
+                    if np.any(is_too_low):
+                        ydata[is_too_low] = np.nan
+                    is_too_high = xdata > max(edgefit.fit_xdata)
+                    if np.any(is_too_high):
+                        ydata[is_too_high] = np.nan
             if b == 0:
                 ydata_yb = np.expand_dims(ydata, axis=1)
             else:
