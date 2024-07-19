@@ -179,14 +179,6 @@ class EdgeFitType:
             self.fit_xdata = self.fit_xdata_orig
             self.fit_ydata = self.fit_ydata_orig
 
-        # Sort X and Y data (helpful for plotting)
-        isort = np.argsort(self.fit_xdata_orig)
-        self.fit_xdata_orig = self.fit_xdata_orig[isort]
-        self.fit_ydata_orig = self.fit_ydata_orig[isort]
-        isort = np.argsort(self.fit_xdata_orig)
-        self.fit_xdata = self.fit_xdata[isort]
-        self.fit_ydata = self.fit_ydata[isort]
-
         # Get best fit
         self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata)
         self.predicted_ydata = self.predict(self.fit_xdata)
