@@ -21,6 +21,8 @@ class EdgeFitListType:
         self.finfo = finfo
         self.km2_error = None
         self.km2_error_adj = None
+        self.rmse = None
+        self.rmse_adj = None
         self.nrmse = None
         self.nrmse_adj = None
 
