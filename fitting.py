@@ -98,13 +98,13 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
 
     # Try all fits
     results = {}
-    # results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)
-    # results["logistic"] = _fit_logistic(xdata, ydata)
-    # results["exponential"] = _fit_exponential(xdata, ydata)
+    results["lognormal"] = _fit_lognormal(xdata, ydata, lognormal_params)
+    results["logistic"] = _fit_logistic(xdata, ydata)
+    results["exponential"] = _fit_exponential(xdata, ydata)
     results["linear"] = _fit_linear(xdata, ydata)
     results["quadratic"] = _fit_quadratic(xdata, ydata)
-    # results["gaussian"] = _fit_gaussian(xdata, ydata)
-    # results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
+    results["gaussian"] = _fit_gaussian(xdata, ydata)
+    results["skewgaussian"] = _fit_skewgaussian(xdata, ydata)
 
     # Find best fit
     best_fit = None
