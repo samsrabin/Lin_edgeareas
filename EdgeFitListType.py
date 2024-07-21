@@ -52,8 +52,10 @@ class EdgeFitListType:
 
     def __str__(self):
         output = ""
-        for ef in self:
+        for b, ef in enumerate(self):
             output += "\n" + str(ef)
+            if self.km2_error is not None:
+                output += f"\n   (Adjustment changes net error from {self.km2_error[b].astype(float):.2e} [{self.pct_error[b].astype(float):.1f}%] to {self.km2_error_adj[b].astype(float):.2e} [{self.pct_error_adj[b].astype(float):.1f}%])"
         return output
 
     def _adjust_predicted_fits(self, ydata_yb, restrict_x):
