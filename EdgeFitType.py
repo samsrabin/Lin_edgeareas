@@ -69,10 +69,6 @@ class EdgeFitType:
         self.fit_result = None
         self.bs_xdata = None
         self.bs_ydata = None
-        self.nrmse = None
-        self.nrmse_adj = None
-        self.km2_error = None
-        self.km2_error_adj = None
         self.predicted_adj_ydata = None
         self.finfo = None
 
@@ -85,25 +81,6 @@ class EdgeFitType:
                 prefix
                 + f"{self.fit_type} r-squared {np.round(self.fit_result.rsquared, 3)}"
             )
-
-
-        if self.km2_error is not None:
-            output += f"\n   (NRMSE {np.round(self.nrmse_adj/self.nrmse, 1)}x worse after adjustment) {np.max(self.binarea)}"
-            decimals = 2
-            km2_error = np.round(self.km2_error, decimals)
-            km2_error_adj = np.round(self.km2_error_adj, decimals)
-            total_bin_area = np.sum(self.binarea)
-            pct_error = 100 * self.km2_error / total_bin_area
-            pct_error_adj = 100 * self.km2_error_adj / total_bin_area
-            decimals = 1
-            pct_error = np.round(pct_error, decimals)
-            pct_error_adj = np.round(pct_error_adj, decimals)
-            output += f"\n   (Adjustment changes net error from {km2_error} [{pct_error}%] to {km2_error_adj} [{pct_error_adj}%])"
-
-            # output += "\n   =========Troubleshooting========="
-            # output += f"\n   Bin area, obs: {np.sum(self.binarea)}"
-            # output += f"\n   Bin area, fit: {np.sum(self.fit_ydata_out*self.all_forest_area)}"
-            # output += f"\n   Bin area, adj: {np.sum(self.fit_ydata_out_adj*self.all_forest_area)}"
 
         return output
 
@@ -197,18 +174,6 @@ class EdgeFitType:
         self.predicted_ydata = self.predict(self.fit_xdata)
         if np.any(np.isnan(self.predicted_ydata)):
             raise RuntimeError("Unexpected NaN in predicted_ydata")
-
-    # Get RMSE
-    def get_rmse(self, get_net_km2_error):
-        self.nrmse = np.sum((self.fit_ydata - self.predicted_ydata) ** 2) ** 0.5 / np.mean(self.fit_ydata)
-        self.nrmse_adj = (
-            np.sum((self.fit_ydata - self.predicted_adj_ydata) ** 2)
-        ) ** 0.5 / np.mean(self.fit_ydata)
-
-        # Get km2 error
-        if get_net_km2_error is not None:
-            self.km2_error = get_net_km2_error(self.predicted_ydata, self.fit_ydata)
-            self.km2_error_adj = get_net_km2_error(self.predicted_adj_ydata, self.fit_ydata)
 
     def predict(self, xdata):
         result = self.fit_result.eval(x=xdata)
