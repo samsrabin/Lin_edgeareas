@@ -114,12 +114,16 @@ class EdgeFitListType:
         if not np.array_equal(self[0].fit_xdata, self[1].fit_xdata):
             raise RuntimeError("fit_xdata unexpectedly differs between bins 0 and 1")
         ydata_yb, ydata_adj_yb = self.get_all_fits_and_adjs(xdata=xdata)
+        adj_sum = 0
+        obs_sum = 0
         for b, ef in enumerate(self):
 
             # Get km2
             obs = ef.get_bin_area_from_xy(xdata)
             fit = ef.get_bin_area_from_xy(ydata_yb[:,b])
             adj = ef.get_bin_area_from_xy(ydata_adj_yb[:,b])
+            obs_sum += np.sum(obs)
+            adj_sum += np.sum(adj)
 
             # Get RMSE
             self.rmse[b] = rmse(fit, obs)
@@ -136,6 +140,9 @@ class EdgeFitListType:
             # Get % error
             self.pct_error[b] = 100 * self.km2_error[b] / np.sum(obs)
             self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(obs)
+
+        if adj_sum != obs_sum:
+            raise RuntimeError(f"adj_sum {adj_sum:.2e} != obs_sum {obs_sum:.2e}")
 
     def nbins(self):
         return len(self)
