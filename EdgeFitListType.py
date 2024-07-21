@@ -144,7 +144,7 @@ class EdgeFitListType:
             self.pct_error[b] = 100 * self.km2_error[b] / np.sum(obs)
             self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(obs)
 
-        if adj_sum != obs_sum:
+        if not np.isclose(adj_sum, obs_sum):
             raise RuntimeError(f"adj_sum {adj_sum:.2e} != obs_sum {obs_sum:.2e}")
 
     def nbins(self):
