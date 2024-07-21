@@ -96,6 +96,8 @@ class EdgeFitListType:
         empty_array = np.full(self.nbins(), np.nan)
         self.rmse = empty_array.copy()
         self.rmse_adj = empty_array.copy()
+        self.nrmse = empty_array.copy()
+        self.nrmse_adj = empty_array.copy()
         self.km2_error = empty_array.copy()
         self.km2_error_adj = empty_array.copy()
         self.pct_error = empty_array.copy()
@@ -115,6 +117,10 @@ class EdgeFitListType:
             # Get RMSE
             self.rmse[b] = rmse(fit, obs)
             self.rmse_adj[b] = rmse(adj, obs)
+
+            # Get NRMSE
+            self.nrmse[b] = self.rmse[b] / np.mean(obs)
+            self.nrmse_adj[b] = self.rmse_adj[b] / np.mean(obs)
 
             # Get km2 error
             self.km2_error[b] = np.sum(fit - obs)
