@@ -87,6 +87,13 @@ class EdgeFitListType:
             ef.ef_fit(finfo)
             self.edgefits.append(ef)
 
+            # Check that all bins get the same X-axis inputs (every bin should be present in the data for every site-year, even if that bin's area is zero)
+            xdata = ef.fit_result.userkws["x"]
+            if b == 0:
+                xdata0 = xdata.copy()
+            elif not np.array_equal(xdata, xdata0):
+                raise RuntimeError(f"X data used to fit {bin_list[b]} (index {b}) differs from that used to fit bin {bin_list[0]} (index {0})")
+
     def get_all_fits_and_adjs(self, xdata=XDATA_01, restrict_x=True):
         ydata_yb = self._predict_multiple_fits(xdata, restrict_x=restrict_x)
         ydata_adj_yb = self._adjust_predicted_fits(ydata_yb, restrict_x)
