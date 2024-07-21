@@ -112,10 +112,9 @@ class EdgeFitListType:
         self.pct_error = empty_array.copy()
         self.pct_error_adj = empty_array.copy()
 
-        xdata = self[0].fit_xdata
         if not np.array_equal(self[0].fit_xdata, self[1].fit_xdata):
             raise RuntimeError("fit_xdata unexpectedly differs between bins 0 and 1")
-        ydata_yb, ydata_adj_yb = self.get_all_fits_and_adjs(xdata=xdata)
+        ydata_yb, ydata_adj_yb = self.get_all_fits_and_adjs(xdata=None)
         adj_sum = 0
         obs_sum = 0
         for b, ef in enumerate(self):
