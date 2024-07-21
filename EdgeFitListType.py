@@ -120,7 +120,7 @@ class EdgeFitListType:
         for b, ef in enumerate(self):
 
             # Get km2
-            obs = ef.get_bin_area_from_xy(xdata)
+            obs = ef.binarea
             fit = ef.get_bin_area_from_xy(ydata_yb[:,b])
             adj = ef.get_bin_area_from_xy(ydata_adj_yb[:,b])
             obs_sum += np.sum(obs)
