@@ -31,6 +31,7 @@ VERSION = 20240709
 # bin_edges_out = None
 bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
 # bin_edges_out = [30, 60, 120, 300]
+# bin_edges_out = [30, 60, 120, 150, 300]
 
 
 # %% Import data

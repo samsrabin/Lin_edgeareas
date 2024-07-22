@@ -171,6 +171,11 @@ class EdgeFitType:
 
         # Get best fit
         self.fit_type, self.fit_result = fit(self.fit_xdata, self.fit_ydata)
+        # if self.fit_type == "lognormal":
+        #     for p in ["amplitude", "center", "sigma"]:
+        #         val = self.fit_result.params[p].value
+        #         print("   ---------")
+        #         print(f"   {p}: {val:.3g}")
         self.predicted_ydata = self.predict(self.fit_xdata)
         if np.any(np.isnan(self.predicted_ydata)):
             raise RuntimeError("Unexpected NaN in predicted_ydata")

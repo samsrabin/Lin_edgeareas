@@ -111,6 +111,7 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
     best_result = None
     best_metric = np.inf
     for this_fit, result in results.items():
+        # print(f"   {this_fit}: r2 {result.rsquared:.3f} (AIC {result.aic:.1f})")
         if result.aic < best_metric:
             best_metric = result.aic
             best_fit = this_fit
