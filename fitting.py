@@ -110,9 +110,7 @@ def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
     best_fit = None
     best_result = None
     best_metric = np.inf
-    for i, (this_fit, result) in enumerate(
-        results.items()
-    ):  # pylint: disable=unused-variable
+    for this_fit, result in results.items():
         if result.aic < best_metric:
             best_metric = result.aic
             best_fit = this_fit
