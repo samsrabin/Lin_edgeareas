@@ -123,6 +123,7 @@ class EdgeFitListType:
 
             # Get m2
             obs = ef.binarea
+            obs_km2 = 1e-6 * obs
             fit = ef.get_bin_area_from_xy(ydata_yb[:,b])
             adj = ef.get_bin_area_from_xy(ydata_adj_yb[:,b])
             obs_sum += np.sum(obs)
@@ -141,8 +142,8 @@ class EdgeFitListType:
             self.km2_error_adj[b] = 1e-6 * np.sum(adj - obs)
 
             # Get % error
-            self.pct_error[b] = 100 * self.km2_error[b] / np.sum(obs)
-            self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(1e-6*obs)
+            self.pct_error[b] = 100 * self.km2_error[b] / np.sum(obs_km2)
+            self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(obs_km2)
 
         if not np.isclose(adj_sum, obs_sum):
             raise RuntimeError(f"adj_sum {adj_sum:.2e} != obs_sum {obs_sum:.2e}")
