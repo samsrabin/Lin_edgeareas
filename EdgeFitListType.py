@@ -55,7 +55,7 @@ class EdgeFitListType:
         for b, ef in enumerate(self):
             output += "\n" + str(ef)
             if self.km2_error is not None:
-                output += f"\n   (Adjustment changes net error from {self.km2_error[b].astype(float):.2e} [{self.pct_error[b].astype(float):.1f}%] to {self.km2_error_adj[b].astype(float):.2e} [{self.pct_error_adj[b].astype(float):.1f}%])"
+                output += f"\n   (Adjustment changes net error from {self.km2_error[b].astype(float):.2g} km2 [{self.pct_error[b].astype(float):.1f}%] to {self.km2_error_adj[b].astype(float):.2g} km2 [{self.pct_error_adj[b].astype(float):.1f}%])"
         return output
 
     def _adjust_predicted_fits(self, ydata_yb, restrict_x):
@@ -121,7 +121,7 @@ class EdgeFitListType:
         obs_sum = 0
         for b, ef in enumerate(self):
 
-            # Get km2
+            # Get m2
             obs = ef.binarea
             fit = ef.get_bin_area_from_xy(ydata_yb[:,b])
             adj = ef.get_bin_area_from_xy(ydata_adj_yb[:,b])
@@ -137,12 +137,12 @@ class EdgeFitListType:
             self.nrmse_adj[b] = self.rmse_adj[b] / np.mean(obs)
 
             # Get km2 error
-            self.km2_error[b] = np.sum(fit - obs)
-            self.km2_error_adj[b] = np.sum(adj - obs)
+            self.km2_error[b] = 1e-6 * np.sum(fit - obs)
+            self.km2_error_adj[b] = 1e-6 * np.sum(adj - obs)
 
             # Get % error
             self.pct_error[b] = 100 * self.km2_error[b] / np.sum(obs)
-            self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(obs)
+            self.pct_error_adj[b] = 100 * self.km2_error_adj[b] / np.sum(1e-6*obs)
 
         if not np.isclose(adj_sum, obs_sum):
             raise RuntimeError(f"adj_sum {adj_sum:.2e} != obs_sum {obs_sum:.2e}")
