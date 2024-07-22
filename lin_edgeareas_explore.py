@@ -142,6 +142,7 @@ sites_to_exclude = []
 BOOTSTRAP = False
 
 for xvar in xvar_list:
+    print(f"===== xvar: {xvar} =====")
 
     finfo = {
         "xvar": xvar,
