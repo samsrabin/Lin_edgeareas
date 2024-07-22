@@ -520,7 +520,7 @@ def drop_siteyears_without_obs(df, sitearea):
     df = df.set_index(sitearea.index.names)
     df = df.join(sitearea)
     missing_obs = df["sitearea"] == 0
-    n_zero = np.sum(missing_obs)
+    n_zero = len(df["sitearea"][missing_obs].index.unique())
     print(f"Dropping {n_zero} site-years with no observations")
     df = df[~missing_obs]
     df = df.drop(columns="sitearea")
