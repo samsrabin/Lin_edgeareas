@@ -173,6 +173,11 @@ class EdgeFitListType:
                 ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
         return ydata_yb
 
+    def print_fitted_equations(self):
+        for edgefit in self:
+            print(" ")
+            edgefit.print_fitted_equation()
+
 def rmse(fit, obs):
     if np.any(np.isnan(fit)):
         raise RuntimeError("Unexpected NaN(s) in fit")

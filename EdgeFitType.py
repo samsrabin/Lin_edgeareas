@@ -195,3 +195,32 @@ class EdgeFitType:
         else:
             raise RuntimeError(f"Unrecognized yvar: {self.finfo['yvar']}")
         return data_out
+
+    def print_fitted_equation(self):
+        if self.fit_type in ["gaussian", "lognormal"]:
+            if self.fit_type == "gaussian":
+                equation = "y = A / (σ * √2π) * exp(-(x-µ)^2 / (2σ^2))"
+            elif self.fit_type == "lognormal":
+                equation = "y = A / (σ * √2π) * exp(-(ln(x)-µ)^2 / (2σ^2))/x"
+            else:
+                raise RuntimeError(f"Unrecognized fit type: {self.fit_type}")
+            where = ("where:\n" +
+                f"   A = amplitude = {self.param('amplitude')}\n" +
+                f"   σ = sigma = {self.param('sigma')}\n" +
+                f"   µ = center = {self.param('center')}"
+            )
+        elif self.fit_type == "quadratic":
+            equation = "   y = ax^2 + bx + c"
+            where = ("where:\n" +
+                f"   a = {self.param('a')}\n" +
+                f"   b = {self.param('b')}\n" +
+                f"   c = {self.param('c')}"
+            )
+        else:
+            raise RuntimeError(f"Unrecognized fit type: {self.fit_type}")
+        print(f"Bin {self.bin_name}: {self.fit_type} fit")
+        print(equation)
+        print(where)
+
+    def param(self, param_name):
+        return self.fit_result.params[param_name].value

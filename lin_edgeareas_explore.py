@@ -29,9 +29,9 @@ THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped
 VERSION = 20240709
 
 # bin_edges_out = None
-bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
+# bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
 # bin_edges_out = [30, 60, 120, 300]
-# bin_edges_out = [30, 60, 120, 150, 300]
+bin_edges_out = [30, 60, 120, 150, 300]
 
 
 # %% Import data
@@ -126,10 +126,10 @@ importlib.reload(lef)
 
 # X variable
 xvar_list = [
-    # "forest_from_ea",
+    "forest_from_ea",
     # "fforest",
-    "croppast",
-    "croppast_frac_croppastfor",
+    # "croppast",
+    # "croppast_frac_croppastfor",
 ]
 
 # Y variable
@@ -152,6 +152,8 @@ for xvar in xvar_list:
     }
 
     edgefits = EdgeFitListType(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
+
+    edgefits.print_fitted_equations()
 
     # Get figure filename suffix
     FIGFILE_SUFFIX = lef.get_figfile_suffix(
