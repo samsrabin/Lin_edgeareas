@@ -154,6 +154,11 @@ for xvar in xvar_list:
     edgefits = EdgeFitListType(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
 
     edgefits.print_fitted_equations()
+    print(" ")
+    print(" ")
+    print(" ")
+    print(" ")
+    edgefits.print_cdl_lines()
 
     # Get figure filename suffix
     FIGFILE_SUFFIX = lef.get_figfile_suffix(

@@ -19,6 +19,7 @@ class EdgeFitListType:
 
         # Initialize some variables
         self.finfo = finfo
+        self.vinfo = vinfo
         self.km2_error = None
         self.km2_error_adj = None
         self.rmse = None
@@ -177,6 +178,104 @@ class EdgeFitListType:
         for edgefit in self:
             print(" ")
             edgefit.print_fitted_equation()
+
+    def print_cdl_lines(self):
+        # Dimensions
+        print("dimensions:")
+        print(f"        fates_edgeforest_bins = {self.nbins()} ;")
+
+        # Variables
+        print("\n\nvariables:")
+        ind0 = "        "
+        ind1 = "                "
+        print(f'{ind0}double fates_edgeforest_bin_edges(fates_edgeforest_bins) ;')
+        print(f'{ind1}fates_edgeforest_bin_edges:units = "m" ;')
+        long_name = "Boundaries of forest edge bins (for each bin, include value closest to zero)"
+        print(f'{ind1}fates_edgeforest_bin_edges:long_name = "{long_name}" ;')
+        cdl_dict = {}
+        init_var = ["_"] * self.nbins()
+        suffix_base = 'for calculating forest area in each edge bin (THISFIT fit)" ;'
+
+        # Variables for gaussian fits
+        suffix = suffix_base.replace("THISFIT", "gaussian")
+        var = "fates_edgeforest_gaussian_amplitude"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Amplitudes {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_gaussian_sigma"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Sigmas {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_gaussian_center"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Centers {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        # Variables for lognormal fits
+        suffix = suffix_base.replace("THISFIT", "lognormal")
+        var = "fates_edgeforest_lognormal_amplitude"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Amplitudes {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_lognormal_sigma"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Sigmas {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_lognormal_center"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "Centers {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        # Variables for quadratic fits
+        suffix = suffix_base.replace("THISFIT", "quadratic")
+        var = "fates_edgeforest_quadratic_a"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "x^2 coefficient {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_quadratic_b"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "x^1 coefficient {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        var = "fates_edgeforest_quadratic_c"
+        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
+        print(f'{ind1}{var}:units = "unitless" ;')
+        print(f'{ind1}{var}:long_name = "x^0 coefficient {suffix}')
+        cdl_dict[var] = init_var.copy()
+
+        # Fill values
+        cdl_dict["fates_edgeforest_bin_edges"] = [0] + self.vinfo["bin_edges_out"]
+        for b, edgefit in enumerate(self):
+            ft = edgefit.fit_type
+            if ft in ["gaussian", "lognormal"]:
+                param_list = ["amplitude", "sigma", "center"]
+            elif ft == "quadratic":
+                param_list = ["a", "b", "c"]
+            else:
+                raise RuntimeError(f"Unrecognized fit_type {edgefit.fit_type}")
+            for param in param_list:
+                this_dict_entry = f"fates_edgeforest_{ft}_{param}"
+                cdl_dict[this_dict_entry][b] = edgefit.param(param)
+
+        # Print values
+        print("\n\ndata:\n")
+        join_str = ", "
+        for key, value in cdl_dict.items():
+            joined_str = join_str.join([str(x) for x in value])
+            print(f" {key} = {joined_str} ;\n")
 
 def rmse(fit, obs):
     if np.any(np.isnan(fit)):
