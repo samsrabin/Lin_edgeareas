@@ -201,7 +201,7 @@ class EdgeFitType:
             if self.fit_type == "gaussian":
                 equation = "y = A / (σ * √2π) * exp(-(x-µ)^2 / (2σ^2))"
             elif self.fit_type == "lognormal":
-                equation = "y = A / (σ * √2π) * exp(-(ln(x)-µ)^2 / (2σ^2))/x"
+                equation = "y = A / (x * σ * √2π) * exp(-(ln(x)-µ)^2 / (2σ^2))"
             else:
                 raise RuntimeError(f"Unrecognized fit type: {self.fit_type}")
             where = ("where:\n" +
