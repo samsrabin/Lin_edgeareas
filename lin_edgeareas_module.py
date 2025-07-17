@@ -68,7 +68,7 @@ def get_site_lc_area(lc, totalareas, landcovers):
     return totalareas
 
 
-def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
+def get_output_filepath(this_dir, version, ef, title, outfile_suffix, extension="pdf"):
     outfile = f"{title}.{version}.{ef.finfo['xvar']}"
     if ef.sites_to_exclude:
         outfile += ".excl"
@@ -78,8 +78,8 @@ def get_figure_filepath(this_dir, version, ef, title, figfile_suffix):
             outfile += str(site)
     if ef.finfo["bootstrap"]:
         outfile += ".bs"
-    outfile += "." + figfile_suffix
-    outfile += ".pdf"
+    outfile += "." + outfile_suffix
+    outfile += "." + extension
     outpath = os.path.join(this_dir, "inout", version, outfile)
 
     return outpath
