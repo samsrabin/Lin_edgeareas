@@ -47,7 +47,7 @@ def get_color(vinfo, b):
     return color
 
 
-def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
+def get_outfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
     """
     Get filename suffix for the current figure
     """

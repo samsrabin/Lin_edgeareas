@@ -179,19 +179,19 @@ class EdgeFitListType:
             print(" ")
             edgefit.print_fitted_equation()
 
-    def print_cdl_lines(self):
+    def print_cdl_lines(self, cdl_file):
         # Dimensions
-        print("dimensions:")
-        print(f"        fates_edgeforest_bins = {self.nbins()} ;")
+        lem.print_and_write("dimensions:", cdl_file)
+        lem.print_and_write(f"        fates_edgeforest_bins = {self.nbins()} ;", cdl_file)
 
         # Variables
-        print("\n\nvariables:")
+        lem.print_and_write("\n\nvariables:", cdl_file)
         ind0 = "        "
         ind1 = "                "
-        print(f'{ind0}double fates_edgeforest_bin_edges(fates_edgeforest_bins) ;')
-        print(f'{ind1}fates_edgeforest_bin_edges:units = "m" ;')
+        lem.print_and_write(f'{ind0}double fates_edgeforest_bin_edges(fates_edgeforest_bins) ;', cdl_file)
+        lem.print_and_write(f'{ind1}fates_edgeforest_bin_edges:units = "m" ;', cdl_file)
         long_name = "Boundaries of forest edge bins (for each bin, include value closest to zero)"
-        print(f'{ind1}fates_edgeforest_bin_edges:long_name = "{long_name}" ;')
+        lem.print_and_write(f'{ind1}fates_edgeforest_bin_edges:long_name = "{long_name}" ;', cdl_file)
         cdl_dict = {}
         init_var = ["_"] * self.nbins()
         suffix_base = 'for calculating forest area in each edge bin (THISFIT fit)" ;'
@@ -199,61 +199,61 @@ class EdgeFitListType:
         # Variables for gaussian fits
         suffix = suffix_base.replace("THISFIT", "gaussian")
         var = "fates_edgeforest_gaussian_amplitude"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Amplitudes {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Amplitudes {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_gaussian_sigma"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Sigmas {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Sigmas {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_gaussian_center"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Centers {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Centers {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         # Variables for lognormal fits
         suffix = suffix_base.replace("THISFIT", "lognormal")
         var = "fates_edgeforest_lognormal_amplitude"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Amplitudes {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Amplitudes {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_lognormal_sigma"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Sigmas {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Sigmas {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_lognormal_center"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "Centers {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "Centers {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         # Variables for quadratic fits
         suffix = suffix_base.replace("THISFIT", "quadratic")
         var = "fates_edgeforest_quadratic_a"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "x^2 coefficient {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "x^2 coefficient {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_quadratic_b"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "x^1 coefficient {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "x^1 coefficient {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_quadratic_c"
-        print(f"{ind0}double {var}(fates_edgeforest_bins) ;")
-        print(f'{ind1}{var}:units = "unitless" ;')
-        print(f'{ind1}{var}:long_name = "x^0 coefficient {suffix}')
+        lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
+        lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
+        lem.print_and_write(f'{ind1}{var}:long_name = "x^0 coefficient {suffix}', cdl_file)
         cdl_dict[var] = init_var.copy()
 
         # Fill values
@@ -271,11 +271,11 @@ class EdgeFitListType:
                 cdl_dict[this_dict_entry][b] = edgefit.param(param)
 
         # Print values
-        print("\n\ndata:\n")
+        lem.print_and_write("\n\ndata:\n", cdl_file)
         join_str = ", "
         for key, value in cdl_dict.items():
             joined_str = join_str.join([str(x) for x in value])
-            print(f" {key} = {joined_str} ;\n")
+            lem.print_and_write(f" {key} = {joined_str} ;\n", cdl_file)
 
 def rmse(fit, obs):
     if np.any(np.isnan(fit)):

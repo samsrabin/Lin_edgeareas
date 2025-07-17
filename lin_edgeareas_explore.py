@@ -158,21 +158,25 @@ for xvar in xvar_list:
 
     edgefits = EdgeFitListType(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
 
+    # Get figure filename suffix
+    OUTFILE_SUFFIX = lef.get_outfile_suffix(
+        vinfo, YVAR, sites_to_exclude, BOOTSTRAP, xvar
+    )
+
     edgefits.print_fitted_equations()
     print(" ")
     print(" ")
     print(" ")
     print(" ")
-    edgefits.print_cdl_lines()
-
-    # Get figure filename suffix
-    FIGFILE_SUFFIX = lef.get_figfile_suffix(
-        vinfo, YVAR, sites_to_exclude, BOOTSTRAP, xvar
-    )
+    cdl_file = lem.get_output_filepath(out_dir, VERSION, edgefits[0], "params", OUTFILE_SUFFIX, extension="cdl")
+    print(cdl_file)
+    if os.path.exists(cdl_file):
+        os.remove(cdl_file)
+    edgefits.print_cdl_lines(cdl_file)
 
     # Save summary figure
     lef.plot_fits_1plot(
-        out_dir, str(VERSION), FIGFILE_SUFFIX, vinfo, edgefits
+        out_dir, str(VERSION), OUTFILE_SUFFIX, vinfo, edgefits
     )
 
     # Save plot with subplots for each bin's scatter and fits
@@ -183,7 +187,7 @@ for xvar in xvar_list:
         edgeareas,
         sites_to_exclude,
         edgefits,
-        FIGFILE_SUFFIX,
+        OUTFILE_SUFFIX,
     )
 
 

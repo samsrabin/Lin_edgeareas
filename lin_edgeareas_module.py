@@ -318,7 +318,12 @@ def label_landcovers(landcovers_legend, landcovers):
     return landcovers
 
 
-
+def print_and_write(line, file, newline=True):
+    print(line)
+    if newline and line[-1] != "\n":
+        line += "\n"
+    with open(file, "a", encoding="utf-8") as f:
+        f.write(line)
 
 
 def read_combine_multiple_csvs(filename_template, version, bin_edges_out):
