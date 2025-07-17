@@ -47,7 +47,7 @@ def get_color(vinfo, b):
     return color
 
 
-def get_outfile_suffix(finfo, vinfo, sites_to_exclude):
+def get_outfile_suffix(finfo, vinfo):
     """
     Get filename suffix for the current figure
     """
@@ -57,9 +57,9 @@ def get_outfile_suffix(finfo, vinfo, sites_to_exclude):
             finfo["yvar"],
         ]
     )
-    if sites_to_exclude:
+    if finfo["sites_to_exclude"]:
         figfile_suffix = (
-            figfile_suffix + "." + ",".join([str(x) for x in sites_to_exclude])
+            figfile_suffix + "." + ",".join([str(x) for x in finfo["sites_to_exclude"]])
         )
     if finfo["bootstrap"]:
         figfile_suffix = ".".join([figfile_suffix, "bs"])

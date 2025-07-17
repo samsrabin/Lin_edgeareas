@@ -177,13 +177,13 @@ for xvar in xvar_list:
         "xvar": xvar,
         "yvar": YVAR,
         "bootstrap": BOOTSTRAP,
+        "sites_to_exclude": sites_to_exclude,
     }
 
     # Fit every edge bin
     edgefits = EdgeFitListType(
         edgeareas=edgeareas,
         totalareas=totalareas,
-        sites_to_exclude=sites_to_exclude,
         vinfo=vinfo,
         finfo=finfo,
     )
@@ -194,7 +194,7 @@ for xvar in xvar_list:
 
     # Get output filename suffix (info about the fits)
     OUTFILE_SUFFIX = lef.get_outfile_suffix(
-        finfo, vinfo, sites_to_exclude
+        finfo, vinfo
     )
 
     # Save .cdl file with fit parameters (and print to screen)
@@ -214,7 +214,7 @@ for xvar in xvar_list:
         version_str=str(VERSION),
         vinfo=vinfo,
         edgeareas=edgeareas,
-        sites_to_exclude=sites_to_exclude,
+        sites_to_exclude=finfo["sites_to_exclude"],
         edgefits=edgefits,
         figfile_suffix=OUTFILE_SUFFIX,
     )

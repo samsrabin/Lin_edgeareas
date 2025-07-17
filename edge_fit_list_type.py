@@ -18,8 +18,11 @@ from lin_edgeareas_module import XDATA_01
 
 
 class EdgeFitListType:
+    """
+    Class to contain a list of EdgeFit objects and do useful things with it
+    """
 
-    def __init__(self, *, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
+    def __init__(self, *, edgeareas, totalareas, vinfo, finfo):
 
         # Initialize some variables
         self.finfo = finfo
@@ -40,7 +43,6 @@ class EdgeFitListType:
         self.fit(
             edgeareas=edgeareas,
             totalareas=totalareas,
-            sites_to_exclude=sites_to_exclude,
             vinfo=vinfo,
             finfo=finfo,
         )
@@ -99,14 +101,14 @@ class EdgeFitListType:
 
         return ydata_yb
 
-    def fit(self, *, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
+    def fit(self, *, edgeareas, totalareas, vinfo, finfo):
         bin_list = pd.unique(edgeareas.edge)
         for b, thisbin in enumerate(bin_list):
             print(f"Fitting bin {thisbin} ({b+1}/{len(bin_list)})...")
             ef = EdgeFitType(
                 edgeareas=edgeareas,
                 totalareas=totalareas,
-                sites_to_exclude=sites_to_exclude,
+                sites_to_exclude=finfo["sites_to_exclude"],
                 b=b,
                 this_bin=thisbin,
                 vinfo=vinfo,
