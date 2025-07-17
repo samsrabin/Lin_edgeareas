@@ -3,19 +3,41 @@ Class for one edge bin's fit
 """
 
 import numpy as np
+import pandas as pd
 from fitting import fit
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-function-docstring
 
 
 class EdgeFitType:
+    """
+    Class for fitting and analyzing a single edge bin.
+    Handles data preparation, fitting, and prediction for one bin.
+    """
+
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, *, edgeareas, totalareas, sites_to_exclude, b, this_bin, vinfo):
+    def __init__(
+        self,
+        *,
+        edgeareas: pd.DataFrame,
+        totalareas: pd.DataFrame,
+        sites_to_exclude: list,
+        b: int,
+        this_bin,
+        vinfo: dict,
+    ):
+        """
+        Initialize EdgeFitType for a single bin.
+        Args:
+            edgeareas, totalareas: DataFrames for edge and total areas.
+            sites_to_exclude: List of sites to exclude.
+            b: Bin index.
+            this_bin: Bin number.
+            vinfo: Version info dict.
+        """
 
         sites_to_include = [
             x for x in np.unique(edgeareas.site) if x not in sites_to_exclude
@@ -77,6 +99,11 @@ class EdgeFitType:
         self.finfo = None
 
     def __str__(self):
+        """
+        String representation of EdgeFitType, including fit type and r-squared.
+        Returns:
+            str: Summary of fit.
+        """
         prefix = f"EdgeFitType for bin {self.bin_number} ({self.bin_name} m): "
         if self.fit_result is None:
             output = prefix + "Not yet fit"
@@ -88,7 +115,12 @@ class EdgeFitType:
 
         return output
 
-    def ef_fit(self, finfo):
+    def ef_fit(self, finfo: dict):
+        """
+        Fit the edge bin using settings from fit info dictionary.
+        Args:
+            finfo (dict): Fit info dict.
+        """
         self.finfo = finfo
 
         # Get X and Y data for fitting, plus anything for analysis
@@ -188,13 +220,27 @@ class EdgeFitType:
         if np.any(np.isnan(self.predicted_ydata)):
             raise RuntimeError("Unexpected NaN in predicted_ydata")
 
-    def predict(self, xdata):
+    def predict(self, xdata: np.ndarray):
+        """
+        Predict values for given xdata using the fitted model.
+        Args:
+            xdata (NumPy array): Input data for prediction.
+        Returns:
+            NumPy array: Predicted values.
+        """
         result = self.fit_result.eval(x=xdata)
         if np.any(np.isnan(result)):
             raise RuntimeError("Unexpected NaN in predict()")
         return result
 
-    def get_bin_area_from_xy(self, data_in):
+    def get_bin_area_from_xy(self, data_in: np.ndarray):
+        """
+        Convert predicted values to bin area using forest area.
+        Args:
+            data_in (NumPy array): Predicted values.
+        Returns:
+            NumPy array: Bin area values.
+        """
         if np.any(np.isnan(data_in)):
             raise RuntimeError("Unexpected NaN in data_in")
 
@@ -205,6 +251,9 @@ class EdgeFitType:
         return data_out
 
     def print_fitted_equation(self):
+        """
+        Print the fitted equation and parameters for the bin.
+        """
         if self.fit_type in ["gaussian", "lognormal"]:
             if self.fit_type == "gaussian":
                 equation = "y = A / (σ * √2π) * exp(-(x-µ)^2 / (2σ^2))"
@@ -232,5 +281,12 @@ class EdgeFitType:
         print(equation)
         print(where)
 
-    def param(self, param_name):
+    def param(self, param_name: str):
+        """
+        Get the value of a fit parameter by name.
+        Args:
+            param_name (str): Name of parameter.
+        Returns:
+            float: Parameter value.
+        """
         return self.fit_result.params[param_name].value

@@ -1,5 +1,6 @@
 """
-Class to contain a list of EdgeFit objects and do useful things with it
+Class to contain a list of EdgeFit objects and do useful things with it.
+Handles fitting, performance metrics, and output formatting for edge bins.
 """
 
 import numpy as np
@@ -13,13 +14,11 @@ from lin_edgeareas_module import XDATA_01
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
 # pylint: disable=too-many-instance-attributes
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-function-docstring
 
 
 class EdgeFitListType:
     """
-    Class to contain a list of EdgeFit objects and do useful things with it
+    Class to contain a list of EdgeFit objects and do useful things with it.
     """
 
     def __init__(self, *, edgeareas, totalareas, vinfo, finfo):
@@ -76,7 +75,24 @@ class EdgeFitListType:
                 )
         return output
 
-    def _adjust_predicted_fits(self, ydata_yb, restrict_x):
+    def _adjust_predicted_fits(self, ydata_yb: np.ndarray, restrict_x: bool):
+        """
+        Checks and adjusts predicted fit values for multiple bins:
+        - Sets any negative predicted fits to zero.
+        - Normalizes predicted fits so the sum across bins equals 1.
+
+        Args:
+            ydata_yb (NumPy array): Array of predicted fit values, expected to have multiple bins.
+            restrict_x (bool): Whether the predicted fits got set to NaN for X values outside the
+                training range. If False, checks that there are no NaN values in the predicted fits.
+
+        Returns:
+            NumPy array: The adjusted and normalized array of predicted fit values.
+
+        Raises:
+            RuntimeError: If input does not contain multiple bins, or if unexpected NaN values are
+            found before or after adjustment.
+        """
         # Checks
         if ydata_yb.ndim == 1 or ydata_yb.shape[1] == 1:
             raise RuntimeError(
@@ -92,6 +108,8 @@ class EdgeFitListType:
         axis = len(ydata_yb.shape) - 1
         ydata_y = np.sum(ydata_yb, axis=axis, keepdims=True)
         ydata_yb = ydata_yb / ydata_y
+
+        # ???
         is_nan = np.squeeze(np.isnan(ydata_y))
         ydata_yb[is_nan, :] = 0
 
@@ -101,7 +119,23 @@ class EdgeFitListType:
 
         return ydata_yb
 
-    def fit(self, *, edgeareas, totalareas, vinfo, finfo):
+    def fit(
+        self,
+        *,
+        edgeareas: pd.DataFrame,
+        totalareas: pd.DataFrame,
+        vinfo: dict,
+        finfo: dict,
+    ):
+        """
+        Fit each edge forest bin.
+
+        Arguments:
+            edgeareas (pd.DataFrame): DataFrame containing edge area information.
+            totalareas (pd.DataFrame): DataFrame containing total area information.
+            vinfo (dict): Variable information dictionary.
+            finfo (dict): Fit information dictionary.
+        """
         bin_list = pd.unique(edgeareas.edge)
         for b, thisbin in enumerate(bin_list):
             print(f"Fitting bin {thisbin} ({b+1}/{len(bin_list)})...")
@@ -128,11 +162,42 @@ class EdgeFitListType:
                 )
 
     def get_all_fits_and_adjs(self, xdata=XDATA_01, restrict_x=True):
+        """
+        Get predicted fits (before and after adjustment) for all bins.
+
+        Arguments:
+            xdata (NumPy array): Input data for prediction (default: XDATA_01, defined in
+                lin_edgeareas_module).
+            restrict_x (bool): Whether to restrict predictions to the range of fitted x values
+                (default: True).
+
+        Returns:
+            Tuple of (predicted fits, adjusted fits) for all bins.
+        """
         ydata_yb = self._predict_multiple_fits(xdata, restrict_x=restrict_x)
         ydata_adj_yb = self._adjust_predicted_fits(ydata_yb, restrict_x)
         return ydata_yb, ydata_adj_yb
 
     def _get_performance_info(self):
+        """
+        Computes and stores performance metrics for each bin's fit.
+
+        The following metrics are calculated for both the fitted and adjusted data:
+            - Root Mean Square Error (RMSE)
+            - Normalized RMSE (NRMSE)
+            - Total error in square kilometers (km2_error)
+            - Percent error (% error)
+
+        The method initializes arrays to store these metrics for each bin, then iterates over all
+        bins to compute:
+            - RMSE and NRMSE between fitted/adjusted bin areas and observed bin areas.
+            - Total error in square kilometers and percent error for each bin.
+            - Checks that the sum of adjusted areas matches the sum of observed areas.
+
+        Raises:
+            RuntimeError: If the x-data used for fitting differs between bins 0 and 1, or if the sum
+                of adjusted areas does not match the sum of observed areas.
+        """
         empty_array = np.full(self.nbins(), np.nan)
         self.rmse = empty_array.copy()
         self.rmse_adj = empty_array.copy()
@@ -178,9 +243,39 @@ class EdgeFitListType:
             raise RuntimeError(f"adj_sum {adj_sum:.2e} != obs_sum {obs_sum:.2e}")
 
     def nbins(self):
+        """
+        Return the number of bins in the edge fit list.
+        Returns:
+            int: Number of bins.
+        """
         return len(self)
 
-    def _predict_multiple_fits(self, xdata, restrict_x=False):
+    def _predict_multiple_fits(self, xdata: np.ndarray, restrict_x=False):
+        """
+        Predicts output values for multiple edge fits using the provided xdata.
+
+        Iterates over each edge fit in the collection, applies the `predict` method of each fit to
+        the input `xdata`, and aggregates the results into a 2D array where each column corresponds
+        to predictions from one edge fit.
+
+        If `xdata` is None, don't bother using `predict`. Instead, just use the X data used in the
+        fit (and the resulting, already-saved predictions as Y).
+
+        If `restrict_x` is True, sets predictions to NaN for x values outside the range of the fit's
+        training data.
+
+        Raises:
+            RuntimeError: If any NaN values are encountered in the predictions after calling
+            `edgefit.predict()`.
+
+        Args:
+            xdata (NumPy array): Input data for prediction. If None, uses each fit's training data.
+            restrict_x (bool, optional): If True, restricts predictions to the range of each fit's
+                training data.
+
+        Returns:
+            NumPy array: 2D array of predicted values, shape (len(xdata), number of edge fits).
+        """
         for b, edgefit in enumerate(self):
             if xdata is None:
                 xdata = edgefit.fit_xdata
@@ -205,11 +300,34 @@ class EdgeFitListType:
         return ydata_yb
 
     def print_fitted_equations(self):
+        """
+        Prints the fitted equations for each edge fit in the collection.
+        """
         for edgefit in self:
             print(" ")
             edgefit.print_fitted_equation()
 
-    def print_cdl_lines(self, cdl_file):
+    def print_cdl_lines(self, cdl_file: str):
+        """
+        Writes a CDL (Common Data form Language) file with lines needed for the FATES param file.
+        Also prints those lines to stdout.
+
+        The method generates CDL definitions for:
+            - Dimensions: Number of forest edge bins.
+            - Variables: Bin edges and fit parameters for Gaussian, lognormal, and quadratic fits,
+              including units and descriptive long names.
+            - Data: Populates the variables with fit results and bin edges.
+
+        Parameters:
+            cdl_file (str): Path to the file where CDL lines will be written.
+
+        Raises:
+            RuntimeError: If an unrecognized fit type is encountered in the edge fits.
+
+        Side Effects:
+            Appends CDL-formatted text to the specified file, describing the structure and data of
+            forest edge fits.
+        """
         # Dimensions
         lem.print_and_write("dimensions:", cdl_file)
         lem.print_and_write(
@@ -321,7 +439,17 @@ class EdgeFitListType:
             lem.print_and_write(f" {key} = {joined_str} ;\n", cdl_file)
 
 
-def rmse(fit, obs):
+def rmse(fit: np.ndarray, obs: np.ndarray):
+    """
+    Calculate the root mean square error (RMSE) between fit and observed values.
+
+    Arguments:
+        fit (NumPy array): Array of fitted values.
+        obs (NumPy array): Array of observed values.
+
+    Returns:
+        float: The RMSE value.
+    """
     if np.any(np.isnan(fit)):
         raise RuntimeError("Unexpected NaN(s) in fit")
     if np.any(np.isnan(obs)):

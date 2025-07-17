@@ -1,5 +1,6 @@
 """
-Functions for making figures
+Functions for making figures for Lin's edge areas analysis.
+Includes plotting and labeling utilities for edge fits and scatter plots.
 """
 
 import __main__ as main
@@ -9,6 +10,7 @@ from matplotlib import colormaps
 import pandas as pd
 import lin_edgeareas_module as lem
 from lin_edgeareas_module import XDATA_01
+from edge_fit_list_type import EdgeFitListType
 
 IS_INTERACTIVE = not hasattr(main, "__file__")
 
@@ -20,9 +22,13 @@ MIN_ALPHA = 1 / 510
 # pylint: disable=too-many-branches
 
 
-def get_axis_labels(var):
+def get_axis_labels(var: str):
     """
-    Get axis labels
+    Get axis label for a variable name.
+    Args:
+        var (str): Variable name.
+    Returns:
+        str: Axis label.
     """
     if var == "forest_from_ea":
         axis = "Forested fraction (sum all edge bins)"
@@ -39,17 +45,30 @@ def get_axis_labels(var):
     return axis
 
 
-def get_color(vinfo, b):
+def get_color(vinfo: dict, b: int):
     """
-    Get color for the given bin
+    Get color for a given edge bin index.
+    Args:
+        vinfo (dict): Version info dict.
+        b (int): Bin index.
+    Returns:
+        color: Color for plotting.
     """
     color = colormaps["jet_r"](b / (vinfo["Nbins_out"] - 1))
     return color
 
 
-def get_outfile_suffix(finfo, vinfo):
+def get_outfile_suffix(finfo: dict, vinfo: dict):
     """
-    Get filename suffix for the current figure
+    Get filename suffix for the current figure. Includes information about the input data version
+    and the fit options.
+
+    Args:
+        finfo (dict): Fit info dict.
+        vinfo (dict): Version info dict.
+
+    Returns:
+        str: Suffix for output file.
     """
     figfile_suffix = ".".join(
         [
@@ -71,9 +90,21 @@ def get_outfile_suffix(finfo, vinfo):
     return figfile_suffix
 
 
-def plot_fits_1plot(out_dir, version_str, outfile_suffix, vinfo, edgefits):
+def plot_fits_1plot(
+    out_dir: str,
+    version_str: [str, int],
+    outfile_suffix: str,
+    vinfo: dict,
+    edgefits: EdgeFitListType,
+):
     """
-    Save summary figure
+    Save summary figure of raw and adjusted predictions for all bins.
+    Args:
+        out_dir (str): Output directory.
+        version_str (str): Data version string.
+        outfile_suffix (str): Output file suffix.
+        vinfo (dict): Version info dict.
+        edgefits: EdgeFitListType object.
     """
     ydata_yb, ydata_adj_yb = edgefits.get_all_fits_and_adjs(restrict_x=False)
     plt.figure()
@@ -109,16 +140,24 @@ def plot_fits_1plot(out_dir, version_str, outfile_suffix, vinfo, edgefits):
 
 def plot_scatter_each_bin(
     *,
-    out_dir,
-    version_str,
-    vinfo,
-    edgeareas,
-    sites_to_exclude,
-    edgefits,
-    figfile_suffix,
+    out_dir: str,
+    version_str: str,
+    vinfo: dict,
+    edgeareas: pd.DataFrame,
+    sites_to_exclude: list,
+    edgefits: EdgeFitListType,
+    figfile_suffix: str,
 ):
     """
-    Save plot with subplots for each bin's scatter and fits
+    Save plot with subplots for each bin's scatter and fits.
+    Args:
+        out_dir (str): Output directory.
+        version_str (str): Data version string.
+        vinfo (dict): Version info dict.
+        edgeareas (pd.DataFrame): Edge areas DataFrame.
+        sites_to_exclude (list): Sites to exclude.
+        edgefits: EdgeFitListType object.
+        figfile_suffix (str): Output file suffix.
     """
     sitecolors = list(colormaps["Set2"].colors[0 : vinfo["Nsites"]])
     sep_sites = vinfo["Nsites"] <= 5 and not edgefits.finfo["bootstrap"]
@@ -218,9 +257,14 @@ def plot_scatter_each_bin(
         plt.show()
 
 
-def sort_xy_data(xdata, ydata):
+def sort_xy_data(xdata: np.ndarray, ydata: np.ndarray):
     """
-    Sort X and Y data according to X data sort order
+    Sort X and Y data according to X data sort order.
+    Args:
+        xdata (NumPy array): X data array.
+        ydata (NumPy array): Y data array.
+    Returns:
+        tuple: Sorted (xdata, ydata).
     """
     if xdata.shape != ydata.shape:
         raise RuntimeError(

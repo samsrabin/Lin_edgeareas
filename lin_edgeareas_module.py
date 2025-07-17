@@ -1,27 +1,33 @@
 """
-Various functions for exploring Lin's edge areas
+Various functions for exploring Lin's edge areas.
+Provides utilities for bin management, output filepaths, and version info.
 """
 
 import os
 import numpy as np
 import pandas as pd
 from lmfit import fit_report  # pylint: disable=unused-import
+from edge_fit_type import EdgeFitType
+
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-function-docstring
 
 # For making plots of predicted values across entire 0-1 range of X-axis
 STEP_01 = 0.001
 XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
 
 
-def add_missing_bins(df, which_df):
+def add_missing_bins(df: pd.DataFrame, which_df: str):
     """
-    Some site-years have bins missing because they had zero area. Add those zeroes.
+    Add zeroes for missing bins in site-years with zero area.
+    Args:
+        df (pd.DataFrame): Input DataFrame.
+        which_df (str): 'edgeareas' or 'landcovers'.
+    Returns:
+        pd.DataFrame: DataFrame with missing bins filled as zero.
     """
 
     if np.any(np.isnan(df)):
@@ -60,7 +66,16 @@ def add_missing_bins(df, which_df):
     return df2
 
 
-def get_site_lc_area(lc, totalareas, landcovers):
+def get_site_lc_area(lc: str, totalareas: pd.DataFrame, landcovers: pd.DataFrame):
+    """
+    Add land cover area for a given type to totalareas DataFrame.
+    Args:
+        lc (str): Land cover type.
+        totalareas (pd.DataFrame): DataFrame to update.
+        landcovers (pd.DataFrame): DataFrame with land cover data.
+    Returns:
+        pd.DataFrame: Updated totalareas DataFrame.
+    """
     lc_area = landcovers[landcovers["is_" + lc]].groupby(["Year", "site"]).sum()
     lc_area = lc_area.rename(columns={"sumarea": lc})
     totalareas = totalareas.join(lc_area[lc])
@@ -69,8 +84,26 @@ def get_site_lc_area(lc, totalareas, landcovers):
 
 
 def get_output_filepath(
-    out_dir, version, ef, title, outfile_suffix, *, extension="pdf"
+    out_dir: str,
+    version,
+    ef: EdgeFitType,
+    title: str,
+    outfile_suffix: str,
+    *,
+    extension="pdf",
 ):
+    """
+    Build output file path for figures or parameter files.
+    Args:
+        out_dir (str): Output directory.
+        version (str/int): Data version.
+        ef: EdgeFitType object.
+        title (str): File title prefix.
+        outfile_suffix (str): Suffix for file.
+        extension (str): File extension (default 'pdf').
+    Returns:
+        str: Full output file path.
+    """
     outfile = f"{title}.{version}"
     if ef.sites_to_exclude:
         outfile += ".excl"
@@ -87,8 +120,14 @@ def get_output_filepath(
     return outpath
 
 
-def bin_edges_to_str(bin_edges):
-    # Check
+def bin_edges_to_str(bin_edges: list):
+    """
+    Convert bin edges to string labels for bins.
+    Args:
+        bin_edges (list): List of bin edge values.
+    Returns:
+        tuple: (number of bins, list of bin labels)
+    """
     if any(x <= 0 for x in bin_edges) or any(np.isinf(bin_edges)):
         raise ValueError(
             "Include only positive, finite bin edges. 0 and Inf are implied."
@@ -105,7 +144,15 @@ def bin_edges_to_str(bin_edges):
     return n_bins, bins
 
 
-def get_version_info(version, bin_edges_out):
+def get_version_info(version, bin_edges_out: list):
+    """
+    Get version info and bin edge mapping for a given data version.
+    Args:
+        version (int/str): Data version.
+        bin_edges_out (list): Output bin edges.
+    Returns:
+        dict: Version info dictionary with bin mapping.
+    """
     vinfo = {}
 
     # Specify bin edges in input file. Do not include 0 or Inf.
@@ -161,7 +208,15 @@ def get_version_info(version, bin_edges_out):
     return vinfo
 
 
-def map_bins_in2out(bin_edges_out, vinfo):
+def map_bins_in2out(bin_edges_out: list, vinfo: dict):
+    """
+    Map input bins to output bins based on bin edges.
+    Args:
+        bin_edges_out (list): Output bin edges.
+        vinfo (dict): Version info dict.
+    Returns:
+        dict: Updated version info with bin mapping.
+    """
     # The first input bin will always map to the first output bin
     vinfo["bin_mapping"] = [1]
 
@@ -197,7 +252,14 @@ def map_bins_in2out(bin_edges_out, vinfo):
     return vinfo
 
 
-def get_bin_lo_hi_from_str(bin_str):
+def get_bin_lo_hi_from_str(bin_str: str):
+    """
+    Get lower and upper bounds from a bin string label.
+    Args:
+        bin_str (str): Bin label string.
+    Returns:
+        tuple: (lower bound, upper bound)
+    """
     if "<" in bin_str:
         lo = -np.inf
         hi = float(bin_str.replace("<", ""))
@@ -214,21 +276,36 @@ def get_bin_lo_hi_from_str(bin_str):
     return lo, hi
 
 
-def read_landcovers_legend(this_dir):
+def read_landcovers_legend(this_dir: str):
+    """
+    Read the landcovers legend CSV file for MapBiomas classification.
+    Args:
+        this_dir (str): Directory containing the legend file.
+    Returns:
+        pd.DataFrame: DataFrame of landcover legend.
+    """
     landcovers_legend = pd.read_csv(
         os.path.join(this_dir, "MAPBIOMAS_Col6_Legenda_Cores.simple.csv")
     )
     return landcovers_legend
 
 
-def import_landcovers_20240506(this_dir, version, bin_edges_out):
-
+def import_landcovers_20240506(this_dir: str, version, bin_edges_out: list):
+    """
+    Import and label landcovers for version 20240506.
+    Args:
+        this_dir (str): Base directory.
+        version (str/int): Data version.
+        bin_edges_out (list): Output bin edges.
+    Returns:
+        pd.DataFrame: Labeled landcovers DataFrame.
+    """
     # Import legend
     landcovers_legend = read_landcovers_legend(this_dir)
 
     # Import landcovers
     filename_template = os.path.join(
-        this_dir, "inout", version, "Landcover_clean_%d.csv"
+        this_dir, "inout", str(version), "Landcover_clean_%d.csv"
     )
     landcovers = read_combine_multiple_csvs(filename_template, version, bin_edges_out)
     landcovers = landcovers.rename(columns={"landcover": "landcover_num"})
@@ -239,7 +316,15 @@ def import_landcovers_20240506(this_dir, version, bin_edges_out):
     return landcovers
 
 
-def label_landcovers(landcovers_legend, landcovers):
+def label_landcovers(landcovers_legend: pd.DataFrame, landcovers: pd.DataFrame):
+    """
+    Add string labels and classification flags to landcovers DataFrame.
+    Args:
+        landcovers_legend (pd.DataFrame): Legend DataFrame.
+        landcovers (pd.DataFrame): Landcovers DataFrame.
+    Returns:
+        pd.DataFrame: Landcovers DataFrame with labels and flags.
+    """
     landcovers = landcovers.assign(tmp=landcovers.landcover_num)
     landcovers = landcovers.set_index("tmp").join(
         landcovers_legend.set_index("landcover_num")
@@ -320,7 +405,14 @@ def label_landcovers(landcovers_legend, landcovers):
     return landcovers
 
 
-def print_and_write(line, file, newline=True):
+def print_and_write(line: str, file: str, newline=True):
+    """
+    Print a line and write it to a file, adding newline if needed.
+    Args:
+        line (str): Line to print and write.
+        file (str): File path.
+        newline (bool): Whether to add a newline (default True).
+    """
     print(line)
     if newline and line[-1] != "\n":
         line += "\n"
@@ -328,7 +420,16 @@ def print_and_write(line, file, newline=True):
         f.write(line)
 
 
-def read_combine_multiple_csvs(filename_template, version, bin_edges_out):
+def read_combine_multiple_csvs(filename_template: str, version, bin_edges_out: list):
+    """
+    Read and combine multiple CSV files for edge areas or landcovers.
+    Args:
+        filename_template (str): Template for file names.
+        version (str/int): Data version.
+        bin_edges_out (list): Output bin edges.
+    Returns:
+        pd.DataFrame: Combined DataFrame.
+    """
     vinfo = get_version_info(version, bin_edges_out)
     df_combined = []
     for f in 1 + np.arange(vinfo["Nsites"]):
@@ -349,7 +450,16 @@ def read_combine_multiple_csvs(filename_template, version, bin_edges_out):
     return df_combined
 
 
-def read_20240605(this_dir, filename_csv, version):
+def read_20240605(this_dir: str, filename_csv: str, version):
+    """
+    Read edge and landcover data for 20240605 and related versions.
+    Args:
+        this_dir (str): Base directory.
+        filename_csv (str): CSV file path.
+        version (str/int): Data version.
+    Returns:
+        tuple: (site_info, siteyear_info, edgeareas, landcovers)
+    """
 
     first_edge_forest_lc = 51
     if version == 20240605:
@@ -500,7 +610,15 @@ def read_20240605(this_dir, filename_csv, version):
     return site_info, siteyear_info, edgeareas, landcovers
 
 
-def combine_bins(edgeareas, vinfo):
+def combine_bins(edgeareas: pd.DataFrame, vinfo: dict):
+    """
+    Combine input bins into output bins using bin mapping.
+    Args:
+        edgeareas (pd.DataFrame): Edge areas DataFrame.
+        vinfo (dict): Version info dict with bin mapping.
+    Returns:
+        pd.DataFrame: Edge areas with combined bins.
+    """
     edge2 = np.full_like(edgeareas["sumarea"].values, np.nan)
     for i, edge_out in enumerate(vinfo["bin_mapping"]):
         edge_in = i + 1
@@ -524,7 +642,15 @@ def combine_bins(edgeareas, vinfo):
     return edgeareas2
 
 
-def drop_siteyears_without_obs(df, sitearea):
+def drop_siteyears_without_obs(df: pd.DataFrame, sitearea: pd.Series):
+    """
+    Drop site-years with no observations (sitearea == 0).
+    Args:
+        df (pd.DataFrame): DataFrame to filter.
+        sitearea (pd.Series): Series of site areas.
+    Returns:
+        pd.DataFrame: Filtered DataFrame.
+    """
     df = df.set_index(sitearea.index.names)
     df = df.join(sitearea)
     missing_obs = df["sitearea"] == 0

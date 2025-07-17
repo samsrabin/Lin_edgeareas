@@ -193,9 +193,7 @@ for xvar in xvar_list:
     print("----------------------------------------------------")
 
     # Get output filename suffix (info about the fits)
-    OUTFILE_SUFFIX = lef.get_outfile_suffix(
-        finfo, vinfo
-    )
+    OUTFILE_SUFFIX = lef.get_outfile_suffix(finfo, vinfo)
 
     # Save .cdl file with fit parameters (and print to screen)
     cdl_file = lem.get_output_filepath(
