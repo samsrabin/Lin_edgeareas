@@ -6,6 +6,8 @@ import numpy as np
 from lmfit import models
 from lmfit.model import ModelResult
 
+VERBOSE = False
+
 
 class LognormalFitParams:
     """
@@ -41,9 +43,10 @@ def _fit_lognormal(
     )
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Lognormal:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Lognormal:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -60,9 +63,10 @@ def _fit_exponential(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Exponential:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Exponential:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -79,9 +83,10 @@ def _fit_gaussian(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Gaussian:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Gaussian:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -98,9 +103,10 @@ def _fit_skewgaussian(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Skewed Gaussian:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Skewed Gaussian:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -117,9 +123,10 @@ def _fit_logistic(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Logistic:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Logistic:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -136,9 +143,10 @@ def _fit_linear(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Linear:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Linear:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -155,9 +163,10 @@ def _fit_quadratic(xdata: np.ndarray, ydata: np.ndarray) -> ModelResult:
     params = model.guess(ydata, x=xdata, seed=1987)
     result = model.fit(ydata, params, x=xdata)
 
-    # print("Quadratic:")
-    # print(fit_report(result))
-    # print(" ")
+    if VERBOSE:
+        print("Quadratic:")
+        print(result.fit_report())
+        print(" ")
     return result
 
 
@@ -196,7 +205,8 @@ def fit(
     best_result: ModelResult | None = None
     best_metric: float = np.inf
     for this_fit, result in results.items():
-        # print(f"   {this_fit}: r2 {result.rsquared:.3f} (AIC {result.aic:.1f})")
+        if VERBOSE:
+            print(f"   {this_fit}: r2 {result.rsquared:.3f} (AIC {result.aic:.1f})")
         if result.aic < best_metric:
             best_metric = result.aic
             best_fit = this_fit
