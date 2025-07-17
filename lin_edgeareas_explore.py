@@ -193,9 +193,8 @@ for xvar in xvar_list:
     print("----------------------------------------------------")
 
     # Get output filename suffix (info about the fits)
-    # TODO: Pass finfo instead of its members separately
     OUTFILE_SUFFIX = lef.get_outfile_suffix(
-        vinfo, YVAR, sites_to_exclude, BOOTSTRAP, xvar
+        finfo, vinfo, sites_to_exclude
     )
 
     # Save .cdl file with fit parameters (and print to screen)

@@ -47,21 +47,21 @@ def get_color(vinfo, b):
     return color
 
 
-def get_outfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
+def get_outfile_suffix(finfo, vinfo, sites_to_exclude):
     """
     Get filename suffix for the current figure
     """
     figfile_suffix = ".".join(
         [
-            xvar,
-            yvar,
+            finfo["xvar"],
+            finfo["yvar"],
         ]
     )
     if sites_to_exclude:
         figfile_suffix = (
             figfile_suffix + "." + ",".join([str(x) for x in sites_to_exclude])
         )
-    if bootstrap:
+    if finfo["bootstrap"]:
         figfile_suffix = ".".join([figfile_suffix, "bs"])
     if vinfo["bin_mapping"] is not None:
         figfile_suffix = ".".join(
