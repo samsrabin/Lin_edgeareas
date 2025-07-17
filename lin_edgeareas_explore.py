@@ -17,7 +17,6 @@ Play with fits to Lin's edge data
 
 import os
 import importlib
-import pandas as pd
 import numpy as np
 import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef

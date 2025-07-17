@@ -9,7 +9,6 @@ from matplotlib import colormaps
 import pandas as pd
 import lin_edgeareas_module as lem
 from lin_edgeareas_module import XDATA_01
-import fitting
 
 IS_INTERACTIVE = not hasattr(main, "__file__")
 
