@@ -19,6 +19,7 @@ from lmfit import fit_report  # pylint: disable=unused-import
 STEP_01 = 0.001
 XDATA_01 = np.arange(0, 1 + STEP_01, STEP_01)
 
+
 def add_missing_bins(df, which_df):
     """
     Some site-years have bins missing because they had zero area. Add those zeroes.
@@ -38,14 +39,14 @@ def add_missing_bins(df, which_df):
     nyears = len(np.unique(df["Year"]))
     n3rd = len(np.unique(df[third_index]))
 
-    expected_edges = np.tile(np.unique(df[third_index].values), nsites*nyears)
+    expected_edges = np.tile(np.unique(df[third_index].values), nsites * nyears)
 
     expected_sites = np.unique(df["site"].values)
     expected_sites = np.repeat(expected_sites, n3rd)
     expected_sites = np.tile(expected_sites, nyears)
 
     expected_years = np.unique(df["Year"].values)
-    expected_years = np.repeat(expected_years, n3rd*nsites)
+    expected_years = np.repeat(expected_years, n3rd * nsites)
 
     sort_vars = ["Year", "site", third_index]
     df2 = df.sort_values(by=sort_vars)
@@ -520,6 +521,7 @@ def combine_bins(edgeareas, vinfo):
     ), "Error combining input to output bins"
 
     return edgeareas2
+
 
 def drop_siteyears_without_obs(df, sitearea):
     df = df.set_index(sitearea.index.names)

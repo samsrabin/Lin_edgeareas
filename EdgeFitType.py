@@ -46,7 +46,7 @@ class EdgeFitType:
 
         # Get edge bin area as fraction of total forest
         bin_as_frac_allforest = self.thisedge_df.bin / self.thisedge_df.forest_from_ea
-        bin_as_frac_allforest[self.thisedge_df.forest_from_ea==0] = 0
+        bin_as_frac_allforest[self.thisedge_df.forest_from_ea == 0] = 0
         self.thisedge_df = self.thisedge_df.assign(
             bin_as_frac_allforest=bin_as_frac_allforest,
         )
@@ -140,8 +140,12 @@ class EdgeFitType:
                     raise RuntimeError(
                         f"Expected {n_choose} samples; got {len(chosen)}"
                     )
-                self.fit_xdata = np.concatenate((self.fit_xdata, self.fit_xdata_orig[chosen]))
-                self.fit_ydata = np.concatenate((self.fit_ydata, self.fit_ydata_orig[chosen]))
+                self.fit_xdata = np.concatenate(
+                    (self.fit_xdata, self.fit_xdata_orig[chosen])
+                )
+                self.fit_ydata = np.concatenate(
+                    (self.fit_ydata, self.fit_ydata_orig[chosen])
+                )
             self.bs_xdata = self.fit_xdata
             self.bs_ydata = self.fit_ydata
 
@@ -204,17 +208,19 @@ class EdgeFitType:
                 equation = "y = A / (x * σ * √2π) * exp(-(ln(x)-µ)^2 / (2σ^2))"
             else:
                 raise RuntimeError(f"Unrecognized fit type: {self.fit_type}")
-            where = ("where:\n" +
-                f"   A = amplitude = {self.param('amplitude')}\n" +
-                f"   σ = sigma = {self.param('sigma')}\n" +
-                f"   µ = center = {self.param('center')}"
+            where = (
+                "where:\n"
+                + f"   A = amplitude = {self.param('amplitude')}\n"
+                + f"   σ = sigma = {self.param('sigma')}\n"
+                + f"   µ = center = {self.param('center')}"
             )
         elif self.fit_type == "quadratic":
             equation = "   y = ax^2 + bx + c"
-            where = ("where:\n" +
-                f"   a = {self.param('a')}\n" +
-                f"   b = {self.param('b')}\n" +
-                f"   c = {self.param('c')}"
+            where = (
+                "where:\n"
+                + f"   a = {self.param('a')}\n"
+                + f"   b = {self.param('b')}\n"
+                + f"   c = {self.param('c')}"
             )
         else:
             raise RuntimeError(f"Unrecognized fit type: {self.fit_type}")

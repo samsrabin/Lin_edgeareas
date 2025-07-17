@@ -168,16 +168,15 @@ for xvar in xvar_list:
     print(" ")
     print(" ")
     print(" ")
-    cdl_file = lem.get_output_filepath(out_dir, VERSION, edgefits[0], "params", OUTFILE_SUFFIX, extension="cdl")
-    print(cdl_file)
+    cdl_file = lem.get_output_filepath(
+        out_dir, VERSION, edgefits[0], "params", OUTFILE_SUFFIX, extension="cdl"
+    )
     if os.path.exists(cdl_file):
         os.remove(cdl_file)
     edgefits.print_cdl_lines(cdl_file)
 
     # Save summary figure
-    lef.plot_fits_1plot(
-        out_dir, str(VERSION), OUTFILE_SUFFIX, vinfo, edgefits
-    )
+    lef.plot_fits_1plot(out_dir, str(VERSION), OUTFILE_SUFFIX, vinfo, edgefits)
 
     # Save plot with subplots for each bin's scatter and fits
     lef.plot_scatter_each_bin(

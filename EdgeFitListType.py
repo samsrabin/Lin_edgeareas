@@ -41,7 +41,6 @@ class EdgeFitListType:
         # Print fit info
         print(self)
 
-
     def __iter__(self):
         return (x for x in self.edgefits)
 
@@ -76,7 +75,7 @@ class EdgeFitListType:
         ydata_y = np.sum(ydata_yb, axis=axis, keepdims=True)
         ydata_yb = ydata_yb / ydata_y
         is_nan = np.squeeze(np.isnan(ydata_y))
-        ydata_yb[is_nan,:] = 0
+        ydata_yb[is_nan, :] = 0
 
         # Check
         if np.any(np.isnan(ydata_yb)):
@@ -97,7 +96,9 @@ class EdgeFitListType:
             if b == 0:
                 xdata0 = xdata.copy()
             elif not np.array_equal(xdata, xdata0):
-                raise RuntimeError(f"X data used to fit {bin_list[b]} (index {b}) differs from that used to fit bin {bin_list[0]} (index {0})")
+                raise RuntimeError(
+                    f"X data used to fit {bin_list[b]} (index {b}) differs from that used to fit bin {bin_list[0]} (index {0})"
+                )
 
     def get_all_fits_and_adjs(self, xdata=XDATA_01, restrict_x=True):
         ydata_yb = self._predict_multiple_fits(xdata, restrict_x=restrict_x)
@@ -125,8 +126,8 @@ class EdgeFitListType:
             # Get m2
             obs = ef.binarea
             obs_km2 = 1e-6 * obs
-            fit = ef.get_bin_area_from_xy(ydata_yb[:,b])
-            adj = ef.get_bin_area_from_xy(ydata_adj_yb[:,b])
+            fit = ef.get_bin_area_from_xy(ydata_yb[:, b])
+            adj = ef.get_bin_area_from_xy(ydata_adj_yb[:, b])
             obs_sum += np.sum(obs)
             adj_sum += np.sum(adj)
 
@@ -171,7 +172,9 @@ class EdgeFitListType:
             if b == 0:
                 ydata_yb = np.expand_dims(ydata, axis=1)
             else:
-                ydata_yb = np.concatenate((ydata_yb, np.expand_dims(ydata, axis=1)), axis=1)
+                ydata_yb = np.concatenate(
+                    (ydata_yb, np.expand_dims(ydata, axis=1)), axis=1
+                )
         return ydata_yb
 
     def print_fitted_equations(self):
@@ -182,16 +185,23 @@ class EdgeFitListType:
     def print_cdl_lines(self, cdl_file):
         # Dimensions
         lem.print_and_write("dimensions:", cdl_file)
-        lem.print_and_write(f"        fates_edgeforest_bins = {self.nbins()} ;", cdl_file)
+        lem.print_and_write(
+            f"        fates_edgeforest_bins = {self.nbins()} ;", cdl_file
+        )
 
         # Variables
         lem.print_and_write("\n\nvariables:", cdl_file)
         ind0 = "        "
         ind1 = "                "
-        lem.print_and_write(f'{ind0}double fates_edgeforest_bin_edges(fates_edgeforest_bins) ;', cdl_file)
+        lem.print_and_write(
+            f"{ind0}double fates_edgeforest_bin_edges(fates_edgeforest_bins) ;",
+            cdl_file,
+        )
         lem.print_and_write(f'{ind1}fates_edgeforest_bin_edges:units = "m" ;', cdl_file)
         long_name = "Boundaries of forest edge bins (for each bin, include value closest to zero)"
-        lem.print_and_write(f'{ind1}fates_edgeforest_bin_edges:long_name = "{long_name}" ;', cdl_file)
+        lem.print_and_write(
+            f'{ind1}fates_edgeforest_bin_edges:long_name = "{long_name}" ;', cdl_file
+        )
         cdl_dict = {}
         init_var = ["_"] * self.nbins()
         suffix_base = 'for calculating forest area in each edge bin (THISFIT fit)" ;'
@@ -241,19 +251,25 @@ class EdgeFitListType:
         var = "fates_edgeforest_quadratic_a"
         lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
         lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
-        lem.print_and_write(f'{ind1}{var}:long_name = "x^2 coefficient {suffix}', cdl_file)
+        lem.print_and_write(
+            f'{ind1}{var}:long_name = "x^2 coefficient {suffix}', cdl_file
+        )
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_quadratic_b"
         lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
         lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
-        lem.print_and_write(f'{ind1}{var}:long_name = "x^1 coefficient {suffix}', cdl_file)
+        lem.print_and_write(
+            f'{ind1}{var}:long_name = "x^1 coefficient {suffix}', cdl_file
+        )
         cdl_dict[var] = init_var.copy()
 
         var = "fates_edgeforest_quadratic_c"
         lem.print_and_write(f"{ind0}double {var}(fates_edgeforest_bins) ;", cdl_file)
         lem.print_and_write(f'{ind1}{var}:units = "unitless" ;', cdl_file)
-        lem.print_and_write(f'{ind1}{var}:long_name = "x^0 coefficient {suffix}', cdl_file)
+        lem.print_and_write(
+            f'{ind1}{var}:long_name = "x^0 coefficient {suffix}', cdl_file
+        )
         cdl_dict[var] = init_var.copy()
 
         # Fill values
@@ -276,6 +292,7 @@ class EdgeFitListType:
         for key, value in cdl_dict.items():
             joined_str = join_str.join([str(x) for x in value])
             lem.print_and_write(f" {key} = {joined_str} ;\n", cdl_file)
+
 
 def rmse(fit, obs):
     if np.any(np.isnan(fit)):

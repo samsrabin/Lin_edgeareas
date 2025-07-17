@@ -71,9 +71,7 @@ def get_outfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
     return figfile_suffix
 
 
-def plot_fits_1plot(
-    out_dir, version_str, outfile_suffix, vinfo, edgefits
-):
+def plot_fits_1plot(out_dir, version_str, outfile_suffix, vinfo, edgefits):
     """
     Save summary figure
     """
@@ -182,7 +180,7 @@ def plot_scatter_each_bin(
 
         # Add best fit
         xdata, ydata = sort_xy_data(ef.fit_xdata, ef.predict(ef.fit_xdata))
-        plt.plot(xdata, ydata , "-k")
+        plt.plot(xdata, ydata, "-k")
 
         # Add chart info
         if sep_sites:
@@ -218,9 +216,12 @@ def plot_scatter_each_bin(
     if IS_INTERACTIVE:
         plt.show()
 
+
 def sort_xy_data(xdata, ydata):
     if xdata.shape != ydata.shape:
-        raise RuntimeError(f"Shapes of xdata ({xdata.shape}) and ydata ({ydata.shape}) differ")
+        raise RuntimeError(
+            f"Shapes of xdata ({xdata.shape}) and ydata ({ydata.shape}) differ"
+        )
     isort = np.argsort(xdata)
     xdata = xdata[isort]
     ydata = ydata[isort]
