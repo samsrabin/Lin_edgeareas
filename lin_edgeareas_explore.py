@@ -22,6 +22,8 @@ import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef
 from EdgeFitListType import EdgeFitListType
 
+# %% Options
+
 THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
 # VERSION = 20240506
 # VERSION = 20240605
@@ -31,6 +33,10 @@ VERSION = 20240709
 # bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
 # bin_edges_out = [30, 60, 120, 300]
 bin_edges_out = [30, 60, 120, 150, 300]
+
+# %% Setup
+
+out_dir = os.path.join(THIS_DIR, "inout", str(VERSION))
 
 
 # %% Import data
@@ -166,12 +172,12 @@ for xvar in xvar_list:
 
     # Save summary figure
     lef.plot_fits_1plot(
-        THIS_DIR, str(VERSION), FIGFILE_SUFFIX, vinfo, edgefits
+        out_dir, str(VERSION), FIGFILE_SUFFIX, vinfo, edgefits
     )
 
     # Save plot with subplots for each bin's scatter and fits
     lef.plot_scatter_each_bin(
-        THIS_DIR,
+        out_dir,
         str(VERSION),
         vinfo,
         edgeareas,

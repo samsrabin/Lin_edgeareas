@@ -72,7 +72,7 @@ def get_figfile_suffix(vinfo, yvar, sites_to_exclude, bootstrap, xvar):
 
 
 def plot_fits_1plot(
-    this_dir, version_str, outfile_suffix, vinfo, edgefits
+    out_dir, version_str, outfile_suffix, vinfo, edgefits
 ):
     """
     Save summary figure
@@ -101,7 +101,7 @@ def plot_fits_1plot(
     plt.title("Raw (solid) and adjusted (dashed) predictions")
 
     outpath = lem.get_output_filepath(
-        this_dir, version_str, edgefits[0], "fit_lines_1plot", outfile_suffix
+        out_dir, version_str, edgefits[0], "fit_lines_1plot", outfile_suffix
     )
     plt.savefig(outpath)
 
@@ -110,7 +110,7 @@ def plot_fits_1plot(
 
 
 def plot_scatter_each_bin(
-    this_dir,
+    out_dir,
     version_str,
     vinfo,
     edgeareas,
@@ -209,7 +209,7 @@ def plot_scatter_each_bin(
 
     # Save
     outpath = lem.get_output_filepath(
-        this_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix
+        out_dir, version_str, edgefits[0], "fits_with_scatter", figfile_suffix
     )
     if not sep_sites:
         outpath = outpath.replace("pdf", "png")

@@ -68,7 +68,7 @@ def get_site_lc_area(lc, totalareas, landcovers):
     return totalareas
 
 
-def get_output_filepath(this_dir, version, ef, title, outfile_suffix, extension="pdf"):
+def get_output_filepath(out_dir, version, ef, title, outfile_suffix, extension="pdf"):
     outfile = f"{title}.{version}.{ef.finfo['xvar']}"
     if ef.sites_to_exclude:
         outfile += ".excl"
@@ -80,7 +80,7 @@ def get_output_filepath(this_dir, version, ef, title, outfile_suffix, extension=
         outfile += ".bs"
     outfile += "." + outfile_suffix
     outfile += "." + extension
-    outpath = os.path.join(this_dir, "inout", version, outfile)
+    outpath = os.path.join(out_dir, outfile)
 
     return outpath
 
