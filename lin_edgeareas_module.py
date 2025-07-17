@@ -69,7 +69,7 @@ def get_site_lc_area(lc, totalareas, landcovers):
 
 
 def get_output_filepath(out_dir, version, ef, title, outfile_suffix, extension="pdf"):
-    outfile = f"{title}.{version}.{ef.finfo['xvar']}"
+    outfile = f"{title}.{version}"
     if ef.sites_to_exclude:
         outfile += ".excl"
         for s, site in enumerate(ef.sites_to_exclude):
