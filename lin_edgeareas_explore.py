@@ -172,12 +172,14 @@ importlib.reload(lef)
 for xvar in xvar_list:
     print(f"===== xvar: {xvar} =====")
 
+    # Dictionary with fit info
     finfo = {
         "xvar": xvar,
         "yvar": YVAR,
         "bootstrap": BOOTSTRAP,
     }
 
+    # Fit every edge bin
     edgefits = EdgeFitListType(
         edgeareas=edgeareas,
         totalareas=totalareas,
@@ -186,16 +188,17 @@ for xvar in xvar_list:
         finfo=finfo,
     )
 
-    # Get figure filename suffix
+    # Print information about the fits
+    edgefits.print_fitted_equations()
+    print("----------------------------------------------------")
+
+    # Get output filename suffix (info about the fits)
+    # TODO: Pass finfo instead of its members separately
     OUTFILE_SUFFIX = lef.get_outfile_suffix(
         vinfo, YVAR, sites_to_exclude, BOOTSTRAP, xvar
     )
 
-    edgefits.print_fitted_equations()
-    print(" ")
-    print(" ")
-    print(" ")
-    print(" ")
+    # Save .cdl file with fit parameters (and print to screen)
     cdl_file = lem.get_output_filepath(
         out_dir, VERSION, edgefits[0], "params", OUTFILE_SUFFIX, extension="cdl"
     )
