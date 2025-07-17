@@ -23,16 +23,56 @@ import lin_edgeareas_figs as lef
 from edge_fit_list_type import EdgeFitListType
 
 # %% Options
+# pylint: disable=pointless-string-statement
 
-THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
-# VERSION = 20240506
-# VERSION = 20240605
-VERSION = 20240709
-
+"""
+Edges of the forest bins we want in the output. Exclude 0 and Inf. Number of bins will be
+len(bin_edges_out) + 1.
+"""
 # bin_edges_out = None
 # bin_edges_out = [30, 60, 90, 120, 300, 500, 1000, 2000]
 # bin_edges_out = [30, 60, 120, 300]
 bin_edges_out = [30, 60, 120, 150, 300]
+
+"""
+Version of the input data to use. This must be a directory in THIS_DIR.
+"""
+# VERSION = 20240506
+# VERSION = 20240605
+VERSION = 20240709
+
+"""
+Directory containing VERSION subdirectories.
+"""
+THIS_DIR = "/Users/samrabin/Library/CloudStorage/Dropbox/2023_NCAR/FATES escaped fire/Lin_edgeareas"
+
+"""
+X variable (predictor)
+"""
+xvar_list = [
+    "forest_from_ea",  # Forested fraction (sum of all edge area bins; "sumarea" column in .csv)
+    # "fforest",  # "Forest-forest" (landcover #1.1)
+    # "croppast",  # Crop + pasture fraction (landcovers #3.1, 3.2, 3.4)
+    # "croppast_frac_croppastfor",  # croppast as fraction of croppast+fforest
+]
+
+"""
+Y variable (what we want to predict)
+"""
+YVAR = "bin_as_frac_allforest"  # Fraction of forest in this bin
+
+"""
+Exclude sites?
+Site 4 has issues in at least some input data versions
+"""
+# sites_to_exclude = [4]
+sites_to_exclude = []
+
+"""
+Bootstrap resample to ensure even sampling across X-axis?
+"""
+BOOTSTRAP = False
+
 
 # %% Setup
 
@@ -128,24 +168,6 @@ if any(totalareas.isna().sum()):
 # %% Fit data
 importlib.reload(lem)
 importlib.reload(lef)
-
-# X variable
-xvar_list = [
-    "forest_from_ea",
-    # "fforest",
-    # "croppast",
-    # "croppast_frac_croppastfor",
-]
-
-# Y variable
-YVAR = "bin_as_frac_allforest"
-
-# Exclude sites?
-# sites_to_exclude = [4]
-sites_to_exclude = []
-
-# Bootstrap resample to ensure even sampling across X-axis?
-BOOTSTRAP = False
 
 for xvar in xvar_list:
     print(f"===== xvar: {xvar} =====")
