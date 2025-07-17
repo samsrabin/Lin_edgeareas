@@ -5,7 +5,6 @@ Various functions for exploring Lin's edge areas
 import os
 import numpy as np
 import pandas as pd
-from lmfit import models
 from lmfit import fit_report  # pylint: disable=unused-import
 
 # pylint: disable=too-many-arguments
@@ -69,7 +68,9 @@ def get_site_lc_area(lc, totalareas, landcovers):
     return totalareas
 
 
-def get_output_filepath(out_dir, version, ef, title, outfile_suffix, extension="pdf"):
+def get_output_filepath(
+    out_dir, version, ef, title, outfile_suffix, *, extension="pdf"
+):
     outfile = f"{title}.{version}"
     if ef.sites_to_exclude:
         outfile += ".excl"

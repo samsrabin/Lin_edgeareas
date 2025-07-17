@@ -1,3 +1,7 @@
+"""
+Class for one edge bin's fit
+"""
+
 import numpy as np
 from fitting import fit
 
@@ -11,7 +15,7 @@ from fitting import fit
 
 class EdgeFitType:
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, edgeareas, totalareas, sites_to_exclude, b, this_bin, vinfo):
+    def __init__(self, *, edgeareas, totalareas, sites_to_exclude, b, this_bin, vinfo):
 
         sites_to_include = [
             x for x in np.unique(edgeareas.site) if x not in sites_to_exclude

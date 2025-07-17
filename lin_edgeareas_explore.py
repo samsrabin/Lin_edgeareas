@@ -20,7 +20,7 @@ import importlib
 import numpy as np
 import lin_edgeareas_module as lem
 import lin_edgeareas_figs as lef
-from EdgeFitListType import EdgeFitListType
+from edge_fit_list_type import EdgeFitListType
 
 # %% Options
 
@@ -156,7 +156,13 @@ for xvar in xvar_list:
         "bootstrap": BOOTSTRAP,
     }
 
-    edgefits = EdgeFitListType(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
+    edgefits = EdgeFitListType(
+        edgeareas=edgeareas,
+        totalareas=totalareas,
+        sites_to_exclude=sites_to_exclude,
+        vinfo=vinfo,
+        finfo=finfo,
+    )
 
     # Get figure filename suffix
     OUTFILE_SUFFIX = lef.get_outfile_suffix(
@@ -180,13 +186,13 @@ for xvar in xvar_list:
 
     # Save plot with subplots for each bin's scatter and fits
     lef.plot_scatter_each_bin(
-        out_dir,
-        str(VERSION),
-        vinfo,
-        edgeareas,
-        sites_to_exclude,
-        edgefits,
-        OUTFILE_SUFFIX,
+        out_dir=out_dir,
+        version_str=str(VERSION),
+        vinfo=vinfo,
+        edgeareas=edgeareas,
+        sites_to_exclude=sites_to_exclude,
+        edgefits=edgefits,
+        figfile_suffix=OUTFILE_SUFFIX,
     )
 
 

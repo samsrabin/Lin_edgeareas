@@ -108,6 +108,7 @@ def plot_fits_1plot(out_dir, version_str, outfile_suffix, vinfo, edgefits):
 
 
 def plot_scatter_each_bin(
+    *,
     out_dir,
     version_str,
     vinfo,
@@ -218,6 +219,9 @@ def plot_scatter_each_bin(
 
 
 def sort_xy_data(xdata, ydata):
+    """
+    Sort X and Y data according to X data sort order
+    """
     if xdata.shape != ydata.shape:
         raise RuntimeError(
             f"Shapes of xdata ({xdata.shape}) and ydata ({ydata.shape}) differ"

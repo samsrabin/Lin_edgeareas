@@ -1,21 +1,25 @@
+"""
+Class to contain a list of EdgeFit objects and do useful things with it
+"""
+
 import numpy as np
 import pandas as pd
-from EdgeFitType import EdgeFitType
+from edge_fit_type import EdgeFitType
 import lin_edgeareas_module as lem
-import fitting
 from lin_edgeareas_module import XDATA_01
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
+# pylint: disable=too-many-instance-attributes
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
 
 class EdgeFitListType:
 
-    def __init__(self, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
+    def __init__(self, *, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
 
         # Initialize some variables
         self.finfo = finfo
@@ -33,7 +37,13 @@ class EdgeFitListType:
             raise RuntimeError("Unexpected NaN in edgeareas")
         if np.any(np.isnan(totalareas)):
             raise RuntimeError("Unexpected NaN in totalareas")
-        self.fit(edgeareas, totalareas, sites_to_exclude, vinfo, finfo)
+        self.fit(
+            edgeareas=edgeareas,
+            totalareas=totalareas,
+            sites_to_exclude=sites_to_exclude,
+            vinfo=vinfo,
+            finfo=finfo,
+        )
 
         # Get performance info
         self._get_performance_info()
@@ -55,7 +65,13 @@ class EdgeFitListType:
         for b, ef in enumerate(self):
             output += "\n" + str(ef)
             if self.km2_error is not None:
-                output += f"\n   (Adjustment changes net error from {self.km2_error[b].astype(float):.2g} km2 [{self.pct_error[b].astype(float):.1f}%] to {self.km2_error_adj[b].astype(float):.2g} km2 [{self.pct_error_adj[b].astype(float):.1f}%])"
+                output += (
+                    "\n   (Adjustment changes net error from "
+                    f"{self.km2_error[b].astype(float):.2g} km2 "
+                    f"[{self.pct_error[b].astype(float):.1f}%] to "
+                    f"{self.km2_error_adj[b].astype(float):.2g} km2 "
+                    f"[{self.pct_error_adj[b].astype(float):.1f}%])"
+                )
         return output
 
     def _adjust_predicted_fits(self, ydata_yb, restrict_x):
@@ -83,21 +99,30 @@ class EdgeFitListType:
 
         return ydata_yb
 
-    def fit(self, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
+    def fit(self, *, edgeareas, totalareas, sites_to_exclude, vinfo, finfo):
         bin_list = pd.unique(edgeareas.edge)
         for b, thisbin in enumerate(bin_list):
             print(f"Fitting bin {thisbin} ({b+1}/{len(bin_list)})...")
-            ef = EdgeFitType(edgeareas, totalareas, sites_to_exclude, b, thisbin, vinfo)
+            ef = EdgeFitType(
+                edgeareas=edgeareas,
+                totalareas=totalareas,
+                sites_to_exclude=sites_to_exclude,
+                b=b,
+                this_bin=thisbin,
+                vinfo=vinfo,
+            )
             ef.ef_fit(finfo)
             self.edgefits.append(ef)
 
-            # Check that all bins get the same X-axis inputs (every bin should be present in the data for every site-year, even if that bin's area is zero)
+            # Check that all bins get the same X-axis inputs (every bin should be present in the
+            # data for every site-year, even if that bin's area is zero)
             xdata = ef.fit_result.userkws["x"]
             if b == 0:
                 xdata0 = xdata.copy()
             elif not np.array_equal(xdata, xdata0):
                 raise RuntimeError(
-                    f"X data used to fit {bin_list[b]} (index {b}) differs from that used to fit bin {bin_list[0]} (index {0})"
+                    f"X data used to fit {bin_list[b]} (index {b}) differs from that used to fit "
+                    "bin {bin_list[0]} (index {0})"
                 )
 
     def get_all_fits_and_adjs(self, xdata=XDATA_01, restrict_x=True):

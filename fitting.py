@@ -1,8 +1,16 @@
+"""
+Module for various fitting functionality
+"""
+
 import numpy as np
 from lmfit import models
 
 
 class LognormalFitParams:
+    """
+    Class to hold parameters related to lognormal fitting
+    """
+
     # pylint: disable=too-few-public-methods
     def __init__(self, center=3.5, sigma=1, amplitude=6):
         self.center = center
@@ -90,6 +98,9 @@ def _fit_quadratic(xdata, ydata):
 
 
 def fit(xdata, ydata, lognormal_params=LognormalFitParams()):
+    """
+    Given X and Y data, find the best fit from a number of options
+    """
 
     if np.any(np.isnan(xdata)):
         raise RuntimeError("Unexpected NaN in xdata")
